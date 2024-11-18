@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">Playlist Maker</string>
+    <string name="search">Поиск</string>
+    <string name="media_library">Медиатека</string>
+    <string name="settings">Настройки</string>
+    <string name="dark_theme">Темная тема</string>
+    <string name="share_app">Поделиться приложением</string>
+    <string name="write_to_support">Написать в поддержку</string>
+    <string name="user_agreement">Пользовательское соглашение</string>
+    <string name="yandex_practicum_URL">https://practicum.yandex.ru/profile/android-developer/</string>
+    <string name="my_email">bigmag174@yandex.ru</string>
+    <string name="email_subject">Сообщение разработчикам и разработчицам приложения Playlist Maker</string>
+    <string name="email_text">Спасибо разработчикам и разработчицам за крутое приложение!</string>
+    <string name="user_agreement_URL">https://yandex.ru/legal/practicum_offer/</string>
+    <string name="nothing_found">Ничего не найдено</string>
+    <string name="internet_issues">Проблемы со связью\n\nЗагрузка не удалась. Проверьте подключение к интернету</string>
+    <string name="server_issues">Ошибка сервера</string>
+    <string name="refresh">Обновить</string>
+    <string name="clear_history">Очистить историю</string>
+    <string name="you_already_searched">Вы искали</string>
+    <string name="duration">Длительность</string>
+    <string name="album">Альбом</string>
+    <string name="year">Год</string>
+    <string name="genre">Жанр</string>
+    <string name="country">Страна</string>
+    <string name="time00_00" translatable="false">00:00</string>
+    <string name="your_media_library_is_empty">Ваша медиатека пуста</string>
+    <string name="you_havent_created_a_single_playlist">Вы не создали\nни одного плейлиста</string>
+    <string name="new_playlist">Новый плейлист</string>
+    <string name="favorite_tracks">Избранные треки</string>
+    <string name="playlists">Плейлисты</string>
+    <string name="there_is_no_app_on_the_device_to_make_this_request">На устройстве нет приложения для выполнения этого запроса</string>
+    <string name="there_is_no_app_on_the_device_to_send_email">На устройстве нет приложения для отправки почты</string>
+    <string name="there_is_no_browser_on_the_device">На устройстве отсутствует браузер</string>
+    <string name="name_with_star">Название*</string>
+    <string name="description">Описание</string>
+    <string name="create">Создать</string>
+    <string name="finish_creating_a_playlist">Завершить создание плейлиста?</string>
+    <string name="cancel">Отмена</string>
+    <string name="finish">Завершить</string>
+    <string name="playlist">Плейлист</string>
+    <string name="created">создан</string>
+    <string name="tracks">треков</string>
+    <string name="add_to_playlist">Добавить в плейлист</string>
+    <string name="track_has_already_been_added_to_the_playlist">Трек уже добавлен в плейлист:</string>
+    <string name="added_to_playlist">Добавлено в плейлист:</string>
+
+</resources>
