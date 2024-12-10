@@ -7,6 +7,7 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="light_grey">#8C8989</color>
     <color name="blue">#3772E7</color>
     <color name="blue_dark">#1444a3</color>
     <color name="background_color">#3772E7</color>
@@ -18,4 +19,19 @@
     <color name="red_light">#F56B6C</color>
     <color name="black_and_white">#1A1B22</color>
     <color name="white_and_black">#FFFFFF</color>
+    <color name="colorPrimary">#FF4682B4</color>
+    <color name="colorPrimaryDark">#004012</color>
+    <color name="colorAccent">#c75f00</color>
+    <color name="light_gray">#e6e6e6</color>
+
+    <color name="main_color">#1f1f1f</color>
+    <color name="second_color">#E13611</color>
+    <color name="third_color">#1166E1</color>
+    <color name="red">#FF0000</color>
+    <color name="hint_color">#373535</color>
+
+    <color name="color_primary">#FF4682B4</color>
+    <color name="color_text_primary">#0E0E12</color>
+    <color name="ic_launcher_background">#FFFFFF</color>
+    <color name="color_text_hint">#0E0E12</color>
 </resources>

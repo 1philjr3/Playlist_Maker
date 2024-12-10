@@ -17,8 +17,6 @@ import com.practicum.playlist_maker.databinding.FragmentFavoriteTracksBinding
 import com.practicum.playlist_maker.mediaLibrary.ui.FavoriteScreenState
 import com.practicum.playlist_maker.mediaLibrary.ui.view_model.FavoriteTracksFragmentViewModel
 import com.practicum.playlist_maker.player.domain.model.Track
-import com.practicum.playlist_maker.player.ui.activity.AudioPlayerFragment
-import com.practicum.playlist_maker.search.ui.TrackAdapter
 import com.practicum.playlist_maker.search.ui.TracksClickListener
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -30,7 +28,6 @@ class FavoriteTracksFragment : Fragment() {
     private var placeholderImage: ImageView? = null
     private var recyclerView: RecyclerView? = null
 
-    private var trackAdapter: TrackAdapter? = null
 
     private val favoriteTracksFragmentViewModel: FavoriteTracksFragmentViewModel by viewModel()
 
@@ -50,10 +47,6 @@ class FavoriteTracksFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        placeholderText = binding.placeholderText
-        placeholderImage = binding.placeholderImage
-        recyclerView = binding.favoriteTracksRecyclerView
-
         favoriteTracksFragmentViewModel.state.observe(viewLifecycleOwner) {
             render(it)
         }
@@ -63,14 +56,10 @@ class FavoriteTracksFragment : Fragment() {
                 val bundle = Bundle()
                 bundle.putString(TRACK, Gson().toJson(track))
                 findNavController().navigate(
-                    R.id.action_mediaLibraryFragment_to_audioPlayerActivity,
                     bundle
                 )
             }
         }
-
-        trackAdapter = TrackAdapter(onClickListener)
-        recyclerView?.adapter = trackAdapter
 
     }
 
@@ -92,9 +81,6 @@ class FavoriteTracksFragment : Fragment() {
                 placeholderImage?.visibility = View.GONE
                 recyclerView?.visibility = View.VISIBLE
 
-                trackAdapter?.tracks?.clear()
-                trackAdapter?.tracks?.addAll(state.tracks)
-                trackAdapter?.notifyDataSetChanged()
             }
         }
     }

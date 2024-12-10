@@ -1,45 +1,31 @@
 package com.practicum.playlist_maker.search.data.sharedPreferences
 
 import android.content.SharedPreferences
-import com.google.gson.Gson
-import com.practicum.playlist_maker.player.domain.model.Track
 
 class LocalStorage(private val sharedPreferences: SharedPreferences) {
-    private companion object {
-        const val TRACK_LIST_KEY = "track_list_key"
+
+    companion object {
+        private const val KEY_SEARCH_HISTORY = "search_history"
     }
 
-    fun getTracks(): Array<Track> {
-        val json = sharedPreferences.getString(TRACK_LIST_KEY, null) ?: return emptyArray()
-        val tracks = Gson().fromJson(json, Array<Track>::class.java)
-        return tracks.reversedArray()
+    fun getSearchHistory(): List<String> {
+        val history = sharedPreferences.getString(KEY_SEARCH_HISTORY, "") ?: ""
+        return if (history.isEmpty()) {
+            emptyList()
+        } else {
+            history.split(",")
+        }
     }
 
-    fun addTrack(track: Track) {
-        val tracks = read().toMutableList()
-
-        if (tracks.contains(track)) {
-            tracks.remove(track)
+    fun saveSearchQuery(query: String) {
+        val history = getSearchHistory().toMutableList()
+        if (!history.contains(query)) {
+            history.add(query)
+            sharedPreferences.edit().putString(KEY_SEARCH_HISTORY, history.joinToString(",")).apply()
         }
-
-        if (tracks.size >= 10) {
-            tracks.removeAt(0)
-        }
-        tracks.add(track)
-
-        sharedPreferences.edit()
-            .putString(TRACK_LIST_KEY, Gson().toJson(tracks))
-            .apply()
     }
 
     fun clearHistory() {
-        sharedPreferences.edit()
-            .clear()
-            .apply()
-    }
-
-    private fun read(): Array<Track> {
-        val json = sharedPreferences.getString(TRACK_LIST_KEY, null) ?: return emptyArray()
-        return Gson().fromJson(json, Array<Track>::class.java)
+        sharedPreferences.edit().remove(KEY_SEARCH_HISTORY).apply()
     }
 }

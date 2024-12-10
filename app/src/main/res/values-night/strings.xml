@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pdf">Добавить PDF</string>
+    <string name="title">Заголовок</string>
+    <string name="tag">Тема</string>
+</resources>

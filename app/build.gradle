@@ -1,76 +1,122 @@
 plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.jetbrainsKotlinAndroid)
+    id("kotlin-kapt")
+    id("kotlin-parcelize")
+    id("com.google.dagger.hilt.android")
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace 'com.practicum.playlist_maker'
-    compileSdk 35
+    namespace = "com.practicum.playlist_maker"
+    compileSdk = 35
 
     defaultConfig {
-        applicationId "com.practicum.playlist_maker"
-        minSdk 23
-        targetSdk 35
-        versionCode 1
-        versionName "1.0"
+        applicationId = "com.practicum.playlist_maker"
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    kapt {
-        arguments {
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    buildFeatures {
+        viewBinding = true
+    }
+
+    packaging {
+        dex {
+            useLegacyPackaging = false
         }
     }
 
-    buildFeatures {
-        viewBinding true
-    }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
 }
 
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.15.0'
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'com.google.android.material:material:1.12.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
-    implementation 'com.github.bumptech.glide:glide:4.14.2'
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-    implementation 'com.google.code.gson:gson:2.10.1'
-    implementation "io.insert-koin:koin-android:3.3.0"
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.storage)
+    implementation(libs.google.firebase.database)
+    implementation(libs.play.services.auth)
+    implementation(libs.firebase.messaging.ktx)
+    implementation(libs.firebase.messaging)
 
-    implementation "androidx.navigation:navigation-fragment-ktx:2.8.4"
-    implementation "androidx.navigation:navigation-ui-ktx:2.8.4"
-    implementation "androidx.fragment:fragment-ktx:1.8.5"
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
+    implementation libs.firebase.common.ktx
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 
-    // Room
-    def room_version = "2.6.1"
-    implementation("androidx.room:room-runtime:$room_version")
-    kapt("androidx.room:room-compiler:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
+    // Room database
+    implementation(libs.room.ktx)
+    implementation(libs.room.runtime)
+    kapt(libs.room.compiler)
 
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    //OkHttpConnection
+    implementation(libs.okhttp.urlconnection)
 
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.14.2'
+    implementation libs.androidx.fragment.ktx
+
+    implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.navigation.fragment.ktx)
+
+
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+
+    // LiveData
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+
+    //Pdf libraries
+    implementation(libs.pdfbox.android)
+    implementation (libs.pdfium.android)
+
+    //Gson
+    implementation(libs.gson)
+
+    //Flex Layout
+    implementation(libs.flexbox)
+
+    implementation libs.koin.android
+
+    implementation libs.glide
+
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+
+    // Kotlin Coroutines
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+
+
 }
+
+// Allow references to generated code
+kapt {
+    correctErrorTypes = true
+}
+

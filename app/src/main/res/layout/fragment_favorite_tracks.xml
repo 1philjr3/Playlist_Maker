@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Указание версии XML и кодировки -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".mediaLibrary.ui.activity.FavoriteTracksFragment">
+    <!-- Основной контейнер ConstraintLayout:
+         - ширина и высота равны размеру экрана (match_parent),
+         - используется для создания сложной адаптивной разметки с привязками,
+         - атрибут tools:context указывает на контекст разметки FavoriteTracksFragment. -->
 
-    <ImageView
+    <TextView
         android:id="@+id/placeholderImage"
         android:layout_width="@dimen/dp120"
         android:layout_height="@dimen/dp120"
@@ -15,6 +21,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+    <!-- Изображение-заполнитель:
+         - уникальный идентификатор задается через android:id,
+         - ширина и высота берутся из ресурса @dimen/dp120,
+         - верхний отступ равен значению ресурса @dimen/dp106,
+         - изображение задается ресурсом @drawable/nothing_found,
+         - изображение выравнивается по центру горизонтально и привязывается к верхнему краю родителя. -->
 
     <TextView
         android:id="@+id/placeholderText"
@@ -24,16 +36,24 @@
         android:layout_marginStart="@dimen/dp24"
         android:layout_marginTop="@dimen/common_padding"
         android:layout_marginEnd="@dimen/dp24"
-        android:text="@string/your_media_library_is_empty"
+        android:text="Пока что не добавлено новых файлов"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/placeholderImage" />
+        app:layout_constraintTop_toBottomOf="@+id/placeholderImage"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        />
+    <!-- Текстовое сообщение-заполнитель:
+         - уникальный идентификатор задается через android:id,
+         - стиль текста применяется из ресурса @style/media_library_text_style,
+         - ширина и высота автоматически подстраиваются под содержимое (wrap_content),
+         - отступы слева, сверху и справа задаются через ресурсы @dimen/dp24 и @dimen/common_padding,
+         - текст берется из строки ресурса @string/your_media_library_is_empty,
+         - текст располагается под изображением и центрируется по горизонтали. -->
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/favoriteTracksRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="@dimen/common_padding"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+    <!-- RecyclerView для отображения списка любимых треков:
+         - уникальный идентификатор задается через android:id,
+         - ширина и высота равны размеру родителя (match_parent),
+         - верхний отступ задается через ресурс @dimen/common_padding,
+         - используется LinearLayoutManager для управления размещением элементов списка. -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
