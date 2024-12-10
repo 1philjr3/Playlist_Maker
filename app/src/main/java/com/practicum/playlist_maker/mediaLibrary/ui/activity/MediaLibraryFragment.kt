@@ -16,8 +16,6 @@ class MediaLibraryFragment : Fragment() {
     private var _binding: FragmentMediaLibraryBinding? = null
     private val binding get() = _binding!!
 
-    private var tabMediator: TabLayoutMediator? = null
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -30,21 +28,20 @@ class MediaLibraryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.viewPager.adapter = MediaLibraryViewPagerAdapter(childFragmentManager, lifecycle)
+        val adapter = MediaLibraryViewPagerAdapter(childFragmentManager, lifecycle)
+        binding.viewPager.adapter = adapter
 
-        tabMediator = TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            when (position) {
-                0 -> tab.text = getString(R.string.favorite_tracks)
-                1 -> tab.text = getString(R.string.playlists)
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
+            tab.text = when (position) {
+                0 -> "Избранное"
+                1 -> "Справочник"
+                else -> null
             }
-        }
-
-        tabMediator?.attach()
+        }.attach()
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
-        tabMediator?.detach()
+        _binding = null
     }
 }

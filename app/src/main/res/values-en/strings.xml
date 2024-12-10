@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="icon_description">Icon</string>
+    <string name="theme_item_title">Themes</string>
     <string name="app_name">Playlist Maker</string>
     <string name="search">Search</string>
     <string name="media_library">Media library</string>
@@ -27,6 +29,7 @@
     <string name="your_media_library_is_empty">Your media library is empty</string>
     <string name="you_havent_created_a_single_playlist">You haven\'t created a single playlist</string>
     <string name="new_playlist">New playlist</string>
+    <string name="documentation">Documentation</string>
     <string name="favorite_tracks">Favorite tracks</string>
     <string name="playlists">Playlists</string>
     <string name="there_is_no_app_on_the_device_to_make_this_request">There is no app on the device to make this request</string>
@@ -44,5 +47,64 @@
     <string name="add_to_playlist">Add to playlist</string>
     <string name="track_has_already_been_added_to_the_playlist">Track has already been added to the playlist:</string>
     <string name="added_to_playlist">Added to playlist:</string>
+    <string name="document_list">Имя документа</string>
 
+    <string name="about_the_application">About the Application</string>
+    <string name="start">Start</string>
+    <string name="search_here">Search here</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="download">Download</string>
+    <string name="enter_pdf_url_here">Enter pdf url here</string>
+    <string name="enter_pdf_title_here">Enter Pdf title here</string>
+    <string name="add_tag">Add Tag</string>
+    <string name="about_optional">About (Optional)</string>
+    <string name="you_don_t_have_any_pdf_notes_yet">You don\'t have any pdf notes yet</string>
+    <string name="add_comment">Add comment</string>
+    <string name="save">Save</string>
+    <string name="add">Add</string>
+    <string name="comments">Comments</string>
+    <string name="page">"Page "</string>
+    <string name="highlights">Highlights</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="search_by_name_or_tag">Search by Name or Tag</string>
+    <string name="pdf">Добавить PDF</string>
+    <string name="addpdf">Добавить</string>
+    <string name="title">Заголовок</string>
+    <string name="tag">Тема</string>
+
+    <string name="notifications_enabled">Enabled</string>
+    <string name="notifications_disabled">Disabled</string>
+    <string name="agree_to_our_privacy_policy">By creating this account, you agree to our Privacy Policy and Cookie Policy.</string>
+    <string name="already_account">Already have an account?</string>
+    <string name="button_login_google_text">Continue with Google</string>
+    <string name="button_login_text">Continue</string>
+    <string name="create_account">Create Account</string>
+    <string name="default_web_client_id">365694026676-ktn41t8rdl6bht6lpmp3j3iomrho6qfm.apps.googleusercontent.com</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="edit_text_email_hint">Email</string>
+    <string name="edit_text_name_hint">Name</string>
+    <string name="edit_text_organisation_hint">Institution / Organisation</string>
+    <string name="edit_text_password_hint">Password</string>
+    <string name="enter_your_email">Enter your username or email</string>
+    <string name="enter_your_username_or_email">Username or email<font color="#EF5350">*</font></string>
+    <string name="forget_password_dec">Don\'t worry! Please enter your email address linked with your account</string>
+    <string name="forgot_password"><u>Forgot Password?</u></string>
+    <string name="forgot_passwords">Forgot Password?</string>
+    <string name="i_have_read_and_accept_the">I have read and accept the</string>
+    <string name="log_out">Log Out</string>
+    <string name="login_signUp">Login or Sign up</string>
+    <string name="no_account_text">"Don\'t have an account?"</string>
+    <string name="orLoginWith">Or, login with</string>
+    <string name="please_wait">Please Wait..</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_text"><u>Privacy Policy and Cookie Policy.</u></string>
+    <string name="remember_password">Remember Password?</string>
+    <string name="send_code">Send Code</string>
+    <string name="sign_in">Login</string>
+    <string name="sign_in_to_continue">Please log in to continue and get the best from our app</string>
+    <string name="sign_up">Sign up</string>
+    <string name="sign_up_now">Sign up</string>
+    <string name="sign_up_to_get_started">Please Sign up to continue and get the best from our app</string>
+    <string name="welcome">Welcome</string>
 </resources>

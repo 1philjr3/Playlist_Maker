@@ -1,7 +1,9 @@
 <resources>
+    <string name="icon_description">Иконка элемента</string>
+    <string name="theme_item_title">Название темы</string>
     <string name="app_name">Playlist Maker</string>
     <string name="search">Поиск</string>
-    <string name="media_library">Медиатека</string>
+    <string name="media_library">Документация</string>
     <string name="settings">Настройки</string>
     <string name="dark_theme">Темная тема</string>
     <string name="share_app">Поделиться приложением</string>
@@ -16,6 +18,7 @@
     <string name="internet_issues">Проблемы со связью\n\nЗагрузка не удалась. Проверьте подключение к интернету</string>
     <string name="server_issues">Ошибка сервера</string>
     <string name="refresh">Обновить</string>
+    <string name="avatar_image" translatable="false">Фото аватарки</string>
     <string name="clear_history">Очистить историю</string>
     <string name="you_already_searched">Вы искали</string>
     <string name="duration">Длительность</string>
@@ -27,7 +30,8 @@
     <string name="your_media_library_is_empty">Ваша медиатека пуста</string>
     <string name="you_havent_created_a_single_playlist">Вы не создали\nни одного плейлиста</string>
     <string name="new_playlist">Новый плейлист</string>
-    <string name="favorite_tracks">Избранные треки</string>
+    <string name="favorite_tracks">Избранное</string>
+    <string name="documentation">Документы</string>
     <string name="playlists">Плейлисты</string>
     <string name="there_is_no_app_on_the_device_to_make_this_request">На устройстве нет приложения для выполнения этого запроса</string>
     <string name="there_is_no_app_on_the_device_to_send_email">На устройстве нет приложения для отправки почты</string>
@@ -44,5 +48,66 @@
     <string name="add_to_playlist">Добавить в плейлист</string>
     <string name="track_has_already_been_added_to_the_playlist">Трек уже добавлен в плейлист:</string>
     <string name="added_to_playlist">Добавлено в плейлист:</string>
+    <string name="document_list">Имя документа</string>
+
+    <string name="about_the_application">О приложении</string>
+    <string name="start">Начать</string>
+    <string name="search_here">Искать здесь</string>
+    <string name="hello_blank_fragment">Привет, пустой фрагмент</string>
+    <string name="download">Скачать</string>
+    <string name="enter_pdf_url_here">Введите URL PDF здесь</string>
+    <string name="enter_pdf_title_here">Введите название PDF здесь</string>
+    <string name="add_tag">Добавить тег</string>
+    <string name="about_optional">Описание (необязательно)</string>
+    <string name="you_don_t_have_any_pdf_notes_yet">У вас еще нет заметок в PDF</string>
+    <string name="add_comment">Добавить комментарий</string>
+    <string name="save">Сохранить</string>
+    <string name="add">Добавить</string>
+    <string name="comments">Комментарии</string>
+    <string name="page">"Страница "</string>
+    <string name="highlights">Выделения</string>
+    <string name="bookmarks">Закладки</string>
+    <string name="search_by_name_or_tag">Поиск по имени или тегу</string>
+    <string name="pdf">Добавить PDF</string>
+    <string name="addpdf">Добавить</string>
+    <string name="title">Заголовок</string>
+    <string name="tag">Тема</string>
+    <string name="search_pdf" translatable="false">Поиск</string>
+
+    <string name="notifications_enabled">Включено</string>
+    <string name="notifications_disabled">Отключено</string>
+    <string name="agree_to_our_privacy_policy">Создавая эту учетную запись, вы соглашаетесь с нашей Политикой конфиденциальности и Политикой использования файлов cookie.</string>
+    <string name="already_account">Уже есть учетная запись?</string>
+    <string name="button_login_google_text">Продолжить с Google</string>
+    <string name="button_login_text">Продолжить</string>
+    <string name="create_account">Создать учетную запись</string>
+    <string name="default_web_client_id">365694026676-ktn41t8rdl6bht6lpmp3j3iomrho6qfm.apps.googleusercontent.com</string>
+    <string name="edit_profile">Редактировать профиль</string>
+    <string name="edit_text_email_hint">Электронная почта</string>
+    <string name="edit_text_name_hint">ФИО</string>
+    <string name="edit_text_organisation_hint">Отдел</string>
+    <string name="edit_text_password_hint">Пароль</string>
+    <string name="enter_your_email">Введите ваше имя пользователя или электронную почту</string>
+    <string name="enter_your_username_or_email">Имя пользователя или электронная почта<font color="#EF5350">*</font></string>
+    <string name="forget_password_dec">Не волнуйтесь! Пожалуйста, введите адрес электронной почты, связанный с вашей учетной записью</string>
+    <string name="forgot_password"><u>Забыли пароль?</u></string>
+    <string name="forgot_passwords">Забыли пароль?</string>
+    <string name="i_have_read_and_accept_the">Я принимаю</string>
+    <string name="log_out">Выйти</string>
+    <string name="login_signUp">Войти или Зарегистрироваться</string>
+    <string name="no_account_text">"Нет учетной записи?"</string>
+    <string name="orLoginWith">Или войдите через</string>
+    <string name="please_wait">Пожалуйста, подождите...</string>
+    <string name="privacy_policy">Политика конфиденциальности</string>
+    <string name="privacy_text"><u>Политика конфиденциальности и Политика использования файлов cookie.</u></string>
+    <string name="remember_password">Помните пароль?</string>
+    <string name="send_code">Отправить код</string>
+    <string name="sign_in">Войти</string>
+    <string name="sign_in_to_continue">Пожалуйста, войдите, чтобы продолжить работу со справочником!</string>
+    <string name="sign_up">Зарегистрироваться</string>
+    <string name="sign_up_now">Зарегистрироваться</string>
+    <string name="sign_up_to_get_started">Добро пожаловать! Чтобы начать работу и воспользоваться справочником, пожалуйста, сделайте вход.</string>
+    <string name="welcome">Добро пожаловать!</string>
+
 
 </resources>

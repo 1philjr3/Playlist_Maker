@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Указание версии XML и кодировки -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,7 +9,11 @@
     android:background="?attr/colorSecondary"
     android:orientation="vertical"
     tools:context=".mediaLibrary.ui.activity.MediaLibraryFragment">
-
+    <!-- Основной контейнер LinearLayout:
+         - задает ширину и высоту равной размеру экрана (match_parent),
+         - фон устанавливается в атрибут colorSecondary темы,
+         - элементы располагаются вертикально (orientation="vertical"),
+         - атрибут tools:context используется для указания контекста разметки в инструментах разработки. -->
 
     <TextView
         style="@style/headerTextViewStyle"
@@ -16,7 +22,12 @@
         android:text="@string/media_library"
         android:textSize="@dimen/text_size_big"
         android:textStyle="bold" />
-
+    <!-- TextView:
+         - стиль применяется из ресурса @style/headerTextViewStyle,
+         - отступы сверху и слева задаются значениями из ресурсов @dimen/common_padding,
+         - текст берется из строки ресурса @string/media_library,
+         - размер текста задается через ресурс @dimen/text_size_big,
+         - шрифт устанавливается жирным (bold). -->
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
@@ -25,10 +36,21 @@
         android:layout_height="wrap_content"
         app:tabIndicatorFullWidth="false"
         app:tabTextAppearance="@style/tab_text_style" />
+    <!-- TabLayout из библиотеки Material Design:
+         - уникальный идентификатор задается через android:id,
+         - стиль берется из ресурса @style/tab_layout_style,
+         - ширина совпадает с шириной родителя (match_parent),
+         - высота автоматически подстраивается под содержимое (wrap_content),
+         - индикатор шириной равен содержимому вкладки (tabIndicatorFullWidth="false"),
+         - внешний вид текста вкладок задается стилем @style/tab_text_style. -->
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+    <!-- ViewPager2 из библиотеки androidx:
+         - уникальный идентификатор задается через android:id,
+         - ширина и высота равны ширине и высоте родителя (match_parent),
+         - используется для отображения страниц, связанных с вкладками. -->
 
 </LinearLayout>
