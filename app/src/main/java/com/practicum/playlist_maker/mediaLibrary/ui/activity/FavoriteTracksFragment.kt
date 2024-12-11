@@ -17,7 +17,6 @@ import com.practicum.playlist_maker.databinding.FragmentFavoriteTracksBinding
 import com.practicum.playlist_maker.mediaLibrary.ui.FavoriteScreenState
 import com.practicum.playlist_maker.mediaLibrary.ui.view_model.FavoriteTracksFragmentViewModel
 import com.practicum.playlist_maker.player.domain.model.Track
-import com.practicum.playlist_maker.search.ui.TracksClickListener
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel

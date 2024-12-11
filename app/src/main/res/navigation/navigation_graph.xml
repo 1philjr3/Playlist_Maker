@@ -20,5 +20,5 @@
         android:id="@+id/mediaLibraryFragment"
         android:name="com.practicum.playlist_maker.mediaLibrary.ui.activity.MediaLibraryFragment"
         android:label="fragment_media_library"
-        tools:layout="@layout/fragment_media_library"/>
+        tools:layout="@layout/fragment_library"/>
 </navigation>

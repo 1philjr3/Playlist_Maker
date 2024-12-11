@@ -36,7 +36,7 @@
                     android:id="@+id/geeksLogo"
                     android:layout_width="wrap_content"
                     android:layout_height="65.0dip"
-                    android:src="@drawable/ic_vk_new_logo" />
+                    android:src="@drawable/logo_footer" />
 
                 <TextView
                     android:id="@+id/welcome"

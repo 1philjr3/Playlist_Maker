@@ -35,7 +35,7 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/ys_display_bold"
                 android:includeFontPadding="false"
-                android:text="@string/highlights"
+                android:text="Отметки"
                 android:textColor="@color/white"
                 android:textSize="20sp" />
 

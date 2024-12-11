@@ -5,11 +5,9 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import com.practicum.playlist_maker.search.data.NetworkClient
 import com.practicum.playlist_maker.search.data.dto.Response
-import com.practicum.playlist_maker.search.data.dto.TracksSearchRequest
+import com.practicum.playlist_maker.search.data.dto.PDFSearchRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 class SearchRetrofitNetworkClient(
     private val itunesService: ItunesApi,
@@ -20,7 +18,7 @@ class SearchRetrofitNetworkClient(
         if (isConnected() == false) {
             return Response().apply { resultCode = -1 }
         }
-        if (dto !is TracksSearchRequest) {
+        if (dto !is PDFSearchRequest) {
             return Response().apply { resultCode = 400 }
         }
 

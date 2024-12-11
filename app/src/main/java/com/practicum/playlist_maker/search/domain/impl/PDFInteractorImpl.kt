@@ -1,13 +1,13 @@
 package com.practicum.playlist_maker.search.domain.impl
 
 import com.practicum.playlist_maker.player.domain.model.Track
-import com.practicum.playlist_maker.search.domain.api.TracksInteractor
-import com.practicum.playlist_maker.search.domain.api.TracksRepository
+import com.practicum.playlist_maker.search.domain.api.PDFInteractor
+import com.practicum.playlist_maker.search.domain.api.PDFRepository
 import com.practicum.playlist_maker.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class TracksInteractorImpl(private val repository: TracksRepository) : TracksInteractor {
+class PDFInteractorImpl(private val repository: PDFRepository) : PDFInteractor {
 
     override fun searchTracks(expression: String): Flow<Pair<List<Track>?, String?>> {
         return repository.searchTracks(expression).map { result ->
