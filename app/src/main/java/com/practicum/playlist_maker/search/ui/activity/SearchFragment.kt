@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,7 +62,14 @@ class SearchFragment : Fragment(), View.OnClickListener, OptionPickFragment.List
         }
 
     private val pdfReaderLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult(), ::onPdfReaderActivityResult)
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result != null && result.resultCode == RESULT_OK) {
+                if (result.data?.action == PdfReaderActivity.RESULT_ACTION_PDF_DELETED) {
+                    Alerts.successSnackBar(binding.root, "Pdf Deleted")
+                    viewModel.getAllPdfs()
+                }
+            }
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -209,19 +217,15 @@ class SearchFragment : Fragment(), View.OnClickListener, OptionPickFragment.List
         addPdfLauncher.launch(launchIntent)
     }
 
-    private fun onPdfReaderActivityResult(result: ActivityResult?) {
-        if (result != null && result.resultCode == RESULT_OK) {
-            if (result.data?.action == PdfReaderActivity.RESULT_ACTION_PDF_DELETED) {
-                Alerts.successSnackBar(binding.root, "Pdf Deleted")
-                // Refresh data
-                viewModel.getAllPdfs()
-            }
-        }
-    }
-
     override fun onPdfItemClicked(pdf: PdfNoteListModel) {
-        val launchIntent = Intent(requireContext(), PdfReaderActivity::class.java)
-        launchIntent.putExtra(BundleArguments.ARGS_PDF_DETAILS, pdf)
+        Log.d("SearchFragment", "PDF model: id=${pdf.id}, title=${pdf.title}, filePath=${pdf.filePath}")
+        
+        val launchIntent = Intent(requireContext(), PdfReaderActivity::class.java).apply {
+            putExtra(PdfReaderActivity.EXTRA_PDF_FILE_PATH, pdf.filePath)
+            putExtra(PdfReaderActivity.EXTRA_PDF_FILE_NAME, pdf.title)
+        }
+        
+        Log.d("SearchFragment", "Launching PdfReaderActivity with extras: ${launchIntent.extras}")
         pdfReaderLauncher.launch(launchIntent)
     }
 

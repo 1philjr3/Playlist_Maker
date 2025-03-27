@@ -9,4 +9,20 @@ sealed class FavoriteScreenState() {
 
     data class Content(val tracks: List<Track>) : FavoriteScreenState()
 
+    data class Directory(
+        val id: String,
+        val name: String,
+        val description: String,
+        val imageUrl: String,
+        val parentId: String?
+    )
+
+    data class Document(
+        val id: String = "",
+        val title: String,
+        val description: String? = null,
+        val pdfUrl: String,
+        val createdAt: Long = System.currentTimeMillis()
+    )
+
 }

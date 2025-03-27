@@ -1,689 +1,1270 @@
 package com.practicum.playlist_maker.pdfreader.ui.activity.reader
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
+import android.app.DownloadManager
+import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.PointF
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.util.Log
 import android.view.View
+import android.widget.ImageView
+import android.widget.PopupMenu
+import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
-import androidx.core.app.NotificationCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
+import androidx.lifecycle.lifecycleScope
+import com.google.android.material.snackbar.Snackbar
 import com.practicum.playlist_maker.R
-import com.practicum.playlist_maker.pdfreader.base.ui.BaseActivity
 import com.practicum.playlist_maker.databinding.ActivityPdfReaderBinding
 import com.practicum.playlist_maker.databinding.ContainerPdfReaderBinding
-import com.practicum.playlist_maker.pdfreader.model.AnnotationListResponse
-import com.practicum.playlist_maker.pdfreader.model.DeleteAnnotationResponse
-import com.practicum.playlist_maker.pdfreader.model.PdfNoteListModel
-import com.practicum.playlist_maker.pdfreader.model.StatusMessageResponse
-import com.practicum.playlist_maker.pdfreader.state.ResponseState
-import com.practicum.playlist_maker.pdfreader.tools.pdf.viewer.PDFView
-import com.practicum.playlist_maker.pdfreader.tools.pdf.viewer.PdfFile
-import com.practicum.playlist_maker.pdfreader.tools.pdf.viewer.model.BookmarkModel
-import com.practicum.playlist_maker.pdfreader.tools.pdf.viewer.model.CommentModel
-import com.practicum.playlist_maker.pdfreader.tools.pdf.viewer.model.Coordinates
-import com.practicum.playlist_maker.pdfreader.tools.pdf.viewer.model.HighlightModel
-import com.practicum.playlist_maker.pdfreader.tools.pdf.viewer.model.PdfAnnotationModel
-import com.practicum.playlist_maker.pdfreader.tools.pdf.viewer.model.TextSelectionData
-import com.practicum.playlist_maker.pdfreader.tools.pdf.viewer.selection.TextSelectionOptionsWindow
-import com.practicum.playlist_maker.pdfreader.ui.activity.annotations.bookmarks.BookmarkListActivity
-import com.practicum.playlist_maker.pdfreader.ui.activity.annotations.comments.CommentsListActivity
-import com.practicum.playlist_maker.pdfreader.ui.activity.annotations.highlight.HighlightListActivity
-import com.practicum.playlist_maker.pdfreader.ui.fragment.CommentViewFragment
-import com.practicum.playlist_maker.pdfreader.ui.fragment.MoreOptionModel
-import com.practicum.playlist_maker.pdfreader.ui.fragment.OptionPickFragment
-import com.practicum.playlist_maker.pdfreader.utils.Alerts
-import com.practicum.playlist_maker.pdfreader.utils.BundleArguments
-import com.practicum.playlist_maker.pdfreader.utils.getParcelableExtraVs
-import com.practicum.playlist_maker.pdfreader.utils.log
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
+import com.practicum.playlist_maker.pdfreader.model.FavoriteUpdateEvent
+import com.practicum.playlist_maker.pdfreader.tools.pdf.viewer.CustomPdfView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.create
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.greenrobot.eventbus.EventBus
+import org.json.JSONObject
+import org.json.JSONArray
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 
-@AndroidEntryPoint
-class PdfReaderActivity : BaseActivity(), View.OnClickListener, OptionPickFragment.Listener,
-    CommentViewFragment.Listener {
+class PdfReaderActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPdfReaderBinding
     private lateinit var contentBinding: ContainerPdfReaderBinding
+    private lateinit var pdfView: CustomPdfView
+    private lateinit var ivBack: ImageView
+    private lateinit var tvTitle: TextView
+    private lateinit var favoriteButton: ImageView
 
-    // Popup window that show after user selecting a text in pdf
-    private var textSelectionOptionWindow: TextSelectionOptionsWindow? = null
-    private var pdfRenderScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    private var pdfFile: File? = null
+    private var client = OkHttpClient()
+    private var isFavorite = false
+    private var currentPdfId: String? = null
+    private var currentFileName: String? = null
+    private var currentFilePath: String? = null
 
-    private var commentListActivityLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-        ::onCommentListActivityResult
-    )
-    private var highlightListActivityLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-        ::onHighlightListActivityResult
-    )
-    private var bookmarkListActivityLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-        ::onBookmarkActivityResult
-    )
-
+    private val TAG = "PdfReaderActivity"
 
     companion object {
-        private const val OPTION_COMMENTS = 1
-        private const val OPTION_HIGHLIGHTS = 2
-        private const val OPTION_BOOKMARKS = 3
-        private const val OPTION_DELETE_PDF = 4
-
+        private const val BUFFER_SIZE = 32768 // 32KB buffer for faster loading
+        const val EXTRA_PDF_FILE_PATH = "extra_pdf_file_path"
+        const val EXTRA_PDF_FILE_NAME = "extra_pdf_file_name"
+        const val EXTRA_PDF_ID = "extra_pdf_id"
         const val RESULT_ACTION_PDF_DELETED = "action.pdf.deleted"
+        
+        // Динамически определяем URL сервера в зависимости от типа устройства
+        fun getServerUrl(): String {
+            // Проверяем, запущено ли приложение на эмуляторе
+            val isEmulator = android.os.Build.MODEL.contains("sdk") ||
+                    android.os.Build.MODEL.contains("Emulator") ||
+                    android.os.Build.MODEL.contains("Android SDK")
+            
+            return if (isEmulator) {
+                "http://10.0.2.2:3000"
+            } else {
+                "http://192.168.0.105:3000"
+            }
+        }
     }
 
-    private val viewModel: PdfReaderViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         binding = ActivityPdfReaderBinding.inflate(layoutInflater)
         contentBinding = binding.container
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+        Log.d(TAG, "onCreate: intent extras = ${intent.extras}")
+        Log.d(TAG, "onCreate: all extras keys = ${intent.extras?.keySet()?.joinToString()}")
+
+        initViews()
+        setupListeners()
+
+        client = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .build()
+
+        val filePath = intent.getStringExtra(EXTRA_PDF_FILE_PATH)
+        Log.d(TAG, "Received file path: $filePath")
+        currentFilePath = filePath
+        
+        // Получаем ID файла из URL, если он присутствует
+        if (filePath?.startsWith("http") == true) {
+            // Проверяем формат URL для файлов с сервера
+            if (filePath.contains("/uploads/pdfs/")) {
+                val fileName = filePath.substringAfterLast("/")
+                Log.d(TAG, "Server file detected with filename: $fileName")
+                
+                // Пытаемся извлечь ID из URL регулярным выражением
+                val extractedId = extractFileIdFromUrl(filePath)
+                if (extractedId != null) {
+                    currentPdfId = extractedId
+                    Log.d(TAG, "Extracted PDF ID from URL: $currentPdfId")
+                } else {
+                    // Попробуем старый способ извлечения ID из имени файла
+                    val parts = fileName.split("-", limit = 2)
+                    if (parts.size > 1 && parts[0].isNotEmpty() && parts[0].all { it.isDigit() }) {
+                        currentPdfId = parts[0]
+                        Log.d(TAG, "Extracted PDF ID from filename: $currentPdfId")
+                    } else {
+                        // Если мы не можем извлечь ID из имени файла или URL, будем искать позже
+                        Log.d(TAG, "Could not extract ID from filename or URL, will search for it later")
+                    }
+                }
+            }
         }
-        getDataFromIntent()
-        initView()
-        preparePdfView()
-    }
 
-    private fun getDataFromIntent() {
-        viewModel.pdfDetails = intent?.getParcelableExtraVs(
-            BundleArguments.ARGS_PDF_DETAILS,
-            PdfNoteListModel::class.java
-        )
-        viewModel.pdfDetails.log("pdfDetails")
-    }
+        // Получаем ID файла напрямую из интента, если он передан
+        intent.getStringExtra(EXTRA_PDF_ID)?.let {
+            currentPdfId = it
+            Log.d(TAG, "Using PDF ID from intent: $currentPdfId")
+        }
 
-    private fun preparePdfView() {
-        contentBinding.pdfView
-            .attachCoroutineScope(pdfRenderScope)
-            .setListener(pdfCallBack)
-        textSelectionOptionWindow = TextSelectionOptionsWindow(this, textSelectionWindowCallback)
-        textSelectionOptionWindow?.attachToPdfView(contentBinding.pdfView)
-        loadPdf()
+        // Если ID файла есть, проверяем статус избранного
+        currentPdfId?.let { checkFavoriteStatus(it) }
 
-    }
-
-    private fun loadPdf() {
-        if (!viewModel.pdfDetails?.filePath.isNullOrEmpty()) {
-            val file = File(viewModel.pdfDetails?.filePath!!)
-            contentBinding.pdfView
-                .fromFile(file)
-                .defaultPage(0)
-                .load()
+        if (filePath != null && filePath.isNotEmpty()) {
+            currentFileName = intent.getStringExtra(EXTRA_PDF_FILE_NAME)
+            
+            // Если имя файла не передано, извлекаем из URL
+            if (currentFileName == null || currentFileName!!.isEmpty()) {
+                currentFileName = filePath.substringAfterLast("/").let {
+                    // Удаляем ID из имени файла, если он там есть
+                    if (it.contains("-")) {
+                        val parts = it.split("-", limit = 2)
+                        if (parts[0].all { c -> c.isDigit() }) {
+                            parts[1]
+                        } else {
+                            it
+                        }
+                    } else {
+                        it
+                    }
+                }
+                Log.d(TAG, "Extracted filename from URL: $currentFileName")
+            }
+            
+            if (filePath.startsWith("http")) {
+                Log.d(TAG, "URL detected, downloading PDF...")
+                val adjustedUrl = if (filePath.contains("localhost")) {
+                    filePath.replace("localhost", "10.0.2.2")
+                } else {
+                    filePath
+                }
+                Log.d(TAG, "Adjusted URL: $adjustedUrl")
+                downloadAndOpenPdf(adjustedUrl)
+            } else {
+                pdfFile = File(filePath)
+                Log.d(TAG, "Local file path detected")
+                openPdfFile()
+            }
         } else {
-            Toast.makeText(this, "pdf file not found", Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "No PDF file path provided")
             finish()
         }
 
-    }
-
-    private fun showLocalNotification(title: String, body: String) {
-        val channelId = "comment_action_channel"
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val existingChannel = notificationManager.getNotificationChannel(channelId)
-            if (existingChannel == null) {
-                val channel = NotificationChannel(
-                    channelId,
-                    "Comment Notifications",
-                    NotificationManager.IMPORTANCE_HIGH
-                ).apply {
-                    setSound(null, null) // Использует системный звук уведомлений
-                }
-                notificationManager.createNotificationChannel(channel)
-            }
-        }
-
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle(title)
-            .setContentText(body)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .build()
-
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
-    }
-
-
-    override fun bindUI() = launch(Dispatchers.Main) {
-        viewModel.addCommentResponse.state.observe(this@PdfReaderActivity) { state ->
-            when (state) {
-                is ResponseState.Failed -> {
-                    Alerts.failureSnackBar(binding.root, state.error)
-                }
-
-                ResponseState.Loading -> {
-
-                }
-
-                is ResponseState.Success<*> -> {
-                    val response = state.response as CommentModel?
-                    if (response != null) {
-                        viewModel.annotations.comments.add(0, response)
-                        contentBinding.pdfView.addComment(response)
-
-                        // !!!!!! Отображение уведомления о добавлении комментария
-                        showLocalNotification(
-                            title = "Новый комментарий",
-                            body = "Михаил ПНР добавил комментарий: ${response.text}"
-                        )
-                    }
-                    Alerts.successSnackBar(binding.root, "Успешно!")
-                }
-
-                is ResponseState.ValidationError -> {
-
-                }
-            }
-        }
-        viewModel.addHighlightResponse.state.observe(this@PdfReaderActivity) { state ->
-            when (state) {
-                is ResponseState.Failed -> {
-                    Alerts.failureSnackBar(binding.root, state.error)
-
-                }
-
-                ResponseState.Loading -> {
-
-                }
-
-                is ResponseState.Success<*> -> {
-                    val response = state.response as HighlightModel?
-                    if (response != null) {
-                        viewModel.annotations.highlights.add(0, response)
-                        contentBinding.pdfView.addHighlight(response)
-                    }
-                    Alerts.successSnackBar(binding.root, "Highlight added successfully")
-
-                }
-
-                is ResponseState.ValidationError -> {
-
-                }
-            }
-        }
-        viewModel.addBookmarkResponse.state.observe(this@PdfReaderActivity) { state ->
-            when (state) {
-                is ResponseState.Failed -> {
-                    Alerts.failureSnackBar(binding.root, state.error)
-
-                }
-
-                ResponseState.Loading -> {
-
-                }
-
-                is ResponseState.Success<*> -> {
-                    val response = state.response as BookmarkModel?
-                    if (response != null) {
-                        viewModel.annotations.bookmarks.add(response)
-                        updateBookmarkInfo(contentBinding.pdfView.currentPage + 1)
-                        Alerts.successSnackBar(binding.root, "Добавлено в избранное")
-
-                    }
-                }
-
-                is ResponseState.ValidationError -> {
-
-                }
-            }
-        }
-        viewModel.removeBookmarkResponse.state.observe(this@PdfReaderActivity) { state ->
-            when (state) {
-                is ResponseState.Failed -> {
-                    Alerts.failureSnackBar(binding.root, state.error)
-
-                }
-
-                ResponseState.Loading -> {
-
-                }
-
-                is ResponseState.Success<*> -> {
-                    val response = state.response as DeleteAnnotationResponse?
-                    if (response != null) {
-                        viewModel.annotations.bookmarks.removeAll {
-                            response.deletedIds.contains(it.id)
-                        }
-                        updateBookmarkInfo(contentBinding.pdfView.currentPage + 1)
-                        Alerts.successSnackBar(binding.root, "Удалено!")
-
-                    }
-                }
-
-                is ResponseState.ValidationError -> {
-
-                }
-            }
-        }
-        viewModel.annotationListResponse.state.observe(this@PdfReaderActivity) { state ->
-            when (state) {
-                is ResponseState.Failed -> {
-                    Alerts.failureSnackBar(binding.root, state.error)
-
-                }
-
-                ResponseState.Loading -> {
-
-                }
-
-                is ResponseState.Success<*> -> {
-                    val response = state.response as AnnotationListResponse?
-                    if (response != null) {
-                        viewModel.annotations = response
-
-                        val highlightAndComments = arrayListOf<PdfAnnotationModel>()
-                        highlightAndComments.addAll(response.comments)
-                        highlightAndComments.addAll(response.highlights)
-                        contentBinding.pdfView.loadAnnotations(highlightAndComments)
-                    }
-                }
-
-                is ResponseState.ValidationError -> {
-
-                }
-            }
-        }
-        viewModel.updateCommentResponse.state.observe(this@PdfReaderActivity) { state ->
-            when (state) {
-                is ResponseState.Failed -> {
-                    Alerts.failureSnackBar(binding.root, state.error)
-                }
-
-                ResponseState.Loading -> {
-
-                }
-
-                is ResponseState.Success<*> -> {
-                    val response = state.response as CommentModel?
-                    if (response != null) {
-                        viewModel.annotations.comments.map {
-                            if (it.id == response.id) {
-                                it.text = response.text
-                                it.updatedAt = response.updatedAt
-                            }
-                        }
-                        contentBinding.pdfView.updateComment(response)
-                        Alerts.successSnackBar(binding.root, "Comment updated")
-
-                    }
-                }
-
-                is ResponseState.ValidationError -> {
-
-                }
-            }
-        }
-        viewModel.deleteCommentResponse.state.observe(this@PdfReaderActivity) { state ->
-            when (state) {
-                is ResponseState.Failed -> {
-                    Alerts.failureSnackBar(binding.root, state.error)
-                }
-
-                ResponseState.Loading -> {
-
-                }
-
-                is ResponseState.Success<*> -> {
-                    val response = state.response as DeleteAnnotationResponse?
-                    if (response != null) {
-                        viewModel.removeComments(response.deletedIds)
-                        contentBinding.pdfView.removeCommentAnnotations(response.deletedIds)
-                        Alerts.successSnackBar(binding.root, "Комментарий удален!")
-
-                    }
-                }
-
-                is ResponseState.ValidationError -> {
-
-                }
-            }
-        }
-        viewModel.pdfDeleteResponse.state.observe(this@PdfReaderActivity) { state ->
-            when (state) {
-                is ResponseState.Failed -> {
-                    Alerts.failureSnackBar(binding.root, state.error)
-                }
-
-                ResponseState.Loading -> {
-
-                }
-
-                is ResponseState.Success<*> -> {
-                    val response = state.response as StatusMessageResponse?
-                    if (response != null) {
-                        val result = Intent(RESULT_ACTION_PDF_DELETED)
-                    }
-                }
-
-                is ResponseState.ValidationError -> {
-
-                }
-            }
+        // Добавляем обработчик для кнопки меню
+        findViewById<ImageView>(R.id.ivMoreOptions).setOnClickListener { view ->
+            showOptionsMenu(view)
         }
     }
 
-    private val pdfCallBack = object : PDFView.Listener {
+    private fun initViews() {
+        try {
+            pdfView = contentBinding.pdfView
+            ivBack = binding.ivBack
+            tvTitle = binding.tvTitle
+            favoriteButton = binding.favoriteButton
 
-        override fun onPreparationStarted() {
-            contentBinding.progressBar.visibility = View.VISIBLE
-        }
-
-        override fun onPreparationSuccess() {
-            viewModel.loadAllAnnotations()
-            contentBinding.cbBookmark.visibility = View.VISIBLE
-            contentBinding.progressBar.visibility = View.GONE
-        }
-
-        override fun onPreparationFailed(error: String, e: Exception?) {
-            contentBinding.progressBar.visibility = View.GONE
-        }
-
-        override fun onPageChanged(pageIndex: Int, paginationPageIndex: Int) {
-            val page = pageIndex + 1
-            updateBookmarkInfo(page)
-            showPageNumber(page)
-        }
-
-        override fun onTextSelected(selection: TextSelectionData, rawPoint: PointF) {
-            textSelectionOptionWindow?.show(rawPoint.x, rawPoint.y, selection)
-        }
-
-        override fun hideTextSelectionOptionWindow() {
-            textSelectionOptionWindow?.dismiss()
-        }
-
-        override fun onTextSelectionCleared() {
-            textSelectionOptionWindow?.dismiss()
-        }
-
-        override fun onNotesStampsClicked(comments: List<CommentModel>, pointOfNote: PointF) {
-            if (comments.size == 1) {
-                CommentViewFragment.showToCommentView(comments.first(), supportFragmentManager)
-            } else {
-                openCommentList(comments)
+            var fileName = intent.getStringExtra(EXTRA_PDF_FILE_NAME)
+            if (fileName == null) {
+                fileName = intent.getStringExtra("pdfTitle")
+                Log.d(TAG, "Using legacy pdfTitle key")
             }
-        }
+            currentFileName = fileName
 
-        override fun loadTopPdfChunk(mergeId: Int, pageIndexToLoad: Int) {
-            // In future i will add pagination to Pdf reader, to load fast :)
-        }
+            Log.d(TAG, "Setting title to: $fileName")
+            tvTitle.text = fileName ?: getString(R.string.pdf_viewer)
 
-        override fun loadBottomPdfChunk(mergedId: Int, pageIndexToLoad: Int) {
-            // In future i will add pagination to Pdf reader, to load fast :)
-        }
+            // Setup PDF viewer listeners
+            pdfView.setOnPageChangeListener { page, total ->
+                Log.d(TAG, "Page changed: $page of $total")
+                tvTitle.text = "$fileName ($page/$total)"
+            }
 
-        override fun onScrolling() {
-
-        }
-
-        override fun onTap() {
-
-        }
-
-        override fun onMergeStart(mergeId: Int, mergeType: PdfFile.MergeType) {
-            // In future i will add pagination to Pdf reader, to load fast :)
-        }
-
-        override fun onMergeEnd(mergeId: Int, mergeType: PdfFile.MergeType) {
-            // In future i will add pagination to Pdf reader, to load fast :)
-        }
-
-        override fun onMergeFailed(
-            mergeId: Int,
-            mergeType: PdfFile.MergeType,
-            message: String,
-            exception: java.lang.Exception?
-        ) {
-            // In future i will add pagination to Pdf reader, to load fast :)
-        }
-
-
-    }
-
-    private val textSelectionWindowCallback = object : TextSelectionOptionsWindow.Listener {
-        override fun onAddHighlightClick(
-            snippet: String,
-            color: String,
-            page: Int,
-            coordinates: Coordinates
-        ) {
-            viewModel.addHighlight(snippet, color, page, coordinates)
-        }
-
-        override fun onAddNotClick(snippet: String, page: Int, coordinates: Coordinates) {
-            val commentModel = CommentModel(
-                -1, snippet, "", page, 0L, coordinates
-            )
-            CommentViewFragment.showToCommentAdd(commentModel, supportFragmentManager)
-        }
-    }
-
-
-    private fun initView() {
-        binding.btBack.setOnClickListener(this)
-        binding.btMoreOptions.setOnClickListener(this)
-        binding.tvTitle.text = viewModel.pdfDetails?.title ?: ""
-        contentBinding.cbBookmark.setOnClickListener(this)
-    }
-
-    override fun onClick(v: View?) {
-        when (v?.id) {
-            R.id.btBack -> {
+            pdfView.setOnErrorListener { error ->
+                Log.e(TAG, "PDF error", error)
+                Toast.makeText(this, "Ошибка загрузки PDF: ${error.localizedMessage}", Toast.LENGTH_SHORT).show()
                 finish()
             }
 
-            R.id.btMoreOptions -> {
-                showMoreOptions()
-            }
+            Log.d(TAG, "Views initialized successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing views", e)
+            Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
+            finish()
+        }
+    }
 
-            R.id.cbBookmark -> {
-                val currentPage = contentBinding.pdfView.currentPage + 1
-                if (contentBinding.cbBookmark.isChecked) {
-                    viewModel.addBookmark(currentPage)
+    private fun setupListeners() {
+        ivBack.setOnClickListener {
+            finish()
+        }
+
+        favoriteButton.setOnClickListener {
+            Log.d(TAG, "Favorite button clicked, isFavorite=$isFavorite, currentPdfId=$currentPdfId")
+            if (currentPdfId != null) {
+                if (isFavorite) {
+                    removeFromFavorites(currentPdfId!!)
                 } else {
-                    viewModel.removeBookmark(currentPage)
+                    addToFavorites(currentPdfId!!)
+                }
+            } else {
+                Log.d(TAG, "No PDF ID available, attempting to register file")
+                if (currentFilePath?.startsWith("http") == true) {
+                    Toast.makeText(this, "Загрузка файла...", Toast.LENGTH_SHORT).show()
+                    // Для URL файлов мы уже пытаемся найти ID в downloadAndOpenPdf
+                    // Проверим, загружен ли файл
+                    if (pdfFile != null && pdfFile!!.exists()) {
+                        Log.d(TAG, "File already downloaded, registering")
+                        registerFileAndAddToFavorites()
+                    } else {
+                        Log.d(TAG, "File not yet downloaded, waiting")
+                        Toast.makeText(this, "Пожалуйста, дождитесь загрузки файла", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    // Для локальных файлов сразу пытаемся регистрировать
+                    registerFileAndAddToFavorites()
                 }
             }
         }
     }
 
-    private fun showMoreOptions() {
-        val options = listOf(
-            MoreOptionModel(OPTION_COMMENTS, "${viewModel.annotations.comments.size}  Комментарии"),
-            MoreOptionModel(
-                OPTION_HIGHLIGHTS,
-                "${viewModel.annotations.highlights.size}  Заголовки"
-            ),
-            MoreOptionModel(OPTION_BOOKMARKS, "${viewModel.annotations.bookmarks.size}  Страницы"),
-            MoreOptionModel(OPTION_DELETE_PDF, "Удалить PDF"),
-        )
-        OptionPickFragment.show(
-            supportFragmentManager,
-            viewModel.pdfDetails?.title ?: "",
-            options
-        )
-    }
-
-    override fun onMoreOptionSelected(option: MoreOptionModel) {
-        when (option.id) {
-            OPTION_COMMENTS -> {
-                val comments = viewModel.annotations.comments.toList()
-                openCommentList(comments)
-            }
-
-            OPTION_HIGHLIGHTS -> {
-                val highlights = viewModel.annotations.highlights.toList()
-                openHighlightList(highlights)
-            }
-
-            OPTION_BOOKMARKS -> {
-                val bookmarks = viewModel.annotations.bookmarks.toList()
-                openBookmarksList(bookmarks)
-            }
-
-            OPTION_DELETE_PDF -> {
-                viewModel.deletePdf()
+    private fun registerFileAndAddToFavorites() {
+        if (currentFileName == null || currentFilePath == null) {
+            Toast.makeText(this, "Не удалось определить данные файла", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        Log.d(TAG, "Registering file: $currentFileName, path: $currentFilePath")
+        
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Сначала проверяем, существует ли файл с таким URL на сервере
+                val fileUrl = currentFilePath
+                val fileListUrl = getServerUrl() + "/directories/root/files"
+                Log.d(TAG, "Checking if file exists in root directory: $fileListUrl")
+                
+                val listRequest = Request.Builder()
+                    .url(fileListUrl)
+                    .get()
+                    .build()
+                
+                try {
+                    client.newCall(listRequest).execute().use { response ->
+                        if (response.isSuccessful) {
+                            val responseBody = response.body?.string() ?: "[]"
+                            val jsonArray = JSONObject("{ \"files\": $responseBody }").getJSONArray("files")
+                            var fileId: String? = null
+                            
+                            // Ищем файл с таким же URL
+                            for (i in 0 until jsonArray.length()) {
+                                val file = jsonArray.getJSONObject(i)
+                                val storedFileUrl = file.getString("fileUrl")
+                                if (storedFileUrl.endsWith(fileUrl?.substringAfterLast("/") ?: "")) {
+                                    fileId = file.getString("id")
+                                    Log.d(TAG, "Found existing file with ID: $fileId and URL: $storedFileUrl")
+                                    break
+                                }
+                            }
+                            
+                            if (fileId != null) {
+                                // Файл найден, используем его ID
+                                currentPdfId = fileId
+                                withContext(Dispatchers.Main) {
+                                    addToFavorites(fileId)
+                                }
+                            } else {
+                                // Файл не найден, регистрируем новый
+                                registerNewFile()
+                            }
+                        } else {
+                            // Не удалось получить список файлов, пробуем регистрировать напрямую
+                            Log.e(TAG, "Failed to get file list: ${response.code}")
+                            registerNewFile()
+                        }
+                    }
+                } catch (e: java.net.ConnectException) {
+                    Log.e(TAG, "Server connection error during file registration", e)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@PdfReaderActivity, "Сервер недоступен, попробуйте зайти в другое время", Toast.LENGTH_LONG).show()
+                        // Пока сервер недоступен, делаем кнопку неактивной
+                        isFavorite = false
+                        updateFavoriteButtonUI()
+                    }
+                } catch (e: java.net.SocketTimeoutException) {
+                    Log.e(TAG, "Server timeout error during file registration", e)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@PdfReaderActivity, "Сервер не отвечает, попробуйте зайти в другое время", Toast.LENGTH_LONG).show()
+                        // Пока сервер недоступен, делаем кнопку неактивной
+                        isFavorite = false
+                        updateFavoriteButtonUI()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during file check", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@PdfReaderActivity, "Ошибка при проверке файла: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
-
-    override fun onDeleteCommentClick(commentId: Long) {
-        viewModel.deleteComment(commentId)
-    }
-
-    override fun onEditCommentSaveClick(commentModel: CommentModel) {
-        viewModel.updateComment(commentModel.id, commentModel.text)
-    }
-
-    override fun onAddCommentSaveClick(commentModel: CommentModel) {
-        textSelectionOptionWindow?.dismiss(true)
-        viewModel.addComment(
-            commentModel.snippet,
-            commentModel.text,
-            commentModel.page,
-            commentModel.coordinates
-        )
-    }
-
-    private fun openCommentList(comments: List<CommentModel>) {
-        val launchIntent = Intent(this, CommentsListActivity::class.java)
-        launchIntent.putParcelableArrayListExtra(BundleArguments.ARGS_COMMENTS, ArrayList(comments))
-        commentListActivityLauncher.launch(launchIntent)
-
-    }
-
-    private fun openHighlightList(highlights: List<HighlightModel>) {
-        val launchIntent = Intent(this, HighlightListActivity::class.java)
-        launchIntent.putParcelableArrayListExtra(
-            BundleArguments.ARGS_HIGHLIGHTS,
-            ArrayList(highlights)
-        )
-        highlightListActivityLauncher.launch(launchIntent)
-    }
-
-    private fun openBookmarksList(bookmarks: List<BookmarkModel>) {
-        val launchIntent = Intent(this, BookmarkListActivity::class.java)
-        launchIntent.putParcelableArrayListExtra(
-            BundleArguments.ARGS_BOOKMARKS,
-            ArrayList(bookmarks)
-        )
-        bookmarkListActivityLauncher.launch(launchIntent)
-    }
-
-    private fun onCommentListActivityResult(activityResult: ActivityResult?) {
-        if (activityResult != null) {
-            activityResult.data?.let { result ->
-                val deletedComments =
-                    result.getLongArrayExtra(BundleArguments.ARGS_DELETED_COMMENT_IDS) ?: LongArray(
-                        0
-                    )
-                deletedComments.toList()
-                if (deletedComments.isNotEmpty()) {
-                    viewModel.removeComments(deletedComments.toList())
-                    contentBinding.pdfView.removeCommentAnnotations(deletedComments.toList())
+    
+    private suspend fun registerNewFile() {
+        try {
+            Log.d(TAG, "Registering new file with name: $currentFileName")
+            
+            // Проверяем, загружен ли файл локально
+            if (pdfFile == null || !pdfFile!!.exists()) {
+                Log.e(TAG, "PDF file is not downloaded yet")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@PdfReaderActivity, "Файл еще не загружен", Toast.LENGTH_SHORT).show()
                 }
-
-                if (result.action == CommentsListActivity.RESULT_ACTION_OPEN_COMMENT) {
-                    val comment = result.getParcelableExtraVs(
-                        BundleArguments.ARGS_COMMENT,
-                        CommentModel::class.java
-                    )
-                    if (comment != null) {
-                        contentBinding.pdfView.jumpTo(comment.page - 1) //Passing index
-                        CommentViewFragment.showToCommentView(comment, supportFragmentManager)
+                return
+            }
+            
+            // Проверяем, что файл уже существует на сервере
+            if (currentFilePath?.startsWith("http") == true) {
+                // Файл уже на сервере, но мы не можем найти его ID
+                // Вместо регистрации нового, попробуем поискать файл другим способом
+                val fileIdFromUrl = extractFileIdFromUrl(currentFilePath!!)
+                if (fileIdFromUrl != null) {
+                    Log.d(TAG, "Extracted file ID from URL: $fileIdFromUrl")
+                    currentPdfId = fileIdFromUrl
+                    withContext(Dispatchers.Main) {
+                        checkFavoriteStatus(fileIdFromUrl)
+                    }
+                    return
+                }
+                
+                // Попытка использовать существующий файл вместо загрузки нового
+                findFileIdByName(currentFileName ?: "unknown")
+                return
+            }
+            
+            // Для локальных файлов мы должны загрузить их на сервер
+            Log.d(TAG, "Local file needs to be uploaded to server first")
+            uploadLocalFile()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error registering file", e)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@PdfReaderActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private suspend fun findFileIdByName(fileName: String) {
+        try {
+            if (fileName.isEmpty()) {
+                Log.d(TAG, "Cannot search for file with empty name")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@PdfReaderActivity, "Название файла не указано", Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+            
+            Log.d(TAG, "Finding file ID by name: $fileName")
+            val url = getServerUrl() + "/directories/root/files"
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+                
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string() ?: "[]"
+                    Log.d(TAG, "Files response: $responseBody")
+                    
+                    // Проверяем, что ответ не пустой и содержит JSON-массив
+                    if (responseBody.trim().startsWith("[")) {
+                        val jsonArray = JSONArray(responseBody)
+                        
+                        // Нормализуем имя файла для сравнения
+                        val normalizedSearchName = normalizeFileName(fileName)
+                        Log.d(TAG, "Normalized search name: $normalizedSearchName")
+                        
+                        // Сначала ищем точное совпадение
+                        var bestMatchId: String? = null
+                        var bestMatchScore = 0.0
+                        
+                        for (i in 0 until jsonArray.length()) {
+                            val file = jsonArray.getJSONObject(i)
+                            val serverFileName = file.getString("name")
+                            val normalizedServerName = normalizeFileName(serverFileName)
+                            
+                            // Считаем коэффициент схожести
+                            val similarityScore = calculateSimilarity(normalizedSearchName, normalizedServerName)
+                            Log.d(TAG, "Comparing with server file: $serverFileName, normalized: $normalizedServerName, score: $similarityScore")
+                            
+                            if (similarityScore > bestMatchScore) {
+                                bestMatchScore = similarityScore
+                                bestMatchId = file.getString("id")
+                            }
+                            
+                            // Если имена полностью совпадают или очень похожи (> 90%)
+                            if (similarityScore > 0.9) {
+                                val fileId = file.getString("id")
+                                Log.d(TAG, "Found good match for file ID by name: $fileId (server name: $serverFileName, score: $similarityScore)")
+                                currentPdfId = fileId
+                                withContext(Dispatchers.Main) {
+                                    addToFavorites(fileId)
+                                }
+                                return
+                            }
+                        }
+                        
+                        // Если нашли файл с приемлемым совпадением
+                        if (bestMatchId != null && bestMatchScore > 0.6) {
+                            Log.d(TAG, "Using best match file ID: $bestMatchId with score: $bestMatchScore")
+                            currentPdfId = bestMatchId
+                            withContext(Dispatchers.Main) {
+                                addToFavorites(bestMatchId)
+                            }
+                            return
+                        }
+                        
+                        // Если все совпадения не найдены, ищем по части URL
+                        val fileUrl = currentFilePath?.substringAfterLast("/")
+                        if (fileUrl != null) {
+                            for (i in 0 until jsonArray.length()) {
+                                val file = jsonArray.getJSONObject(i)
+                                if (file.has("fileUrl")) {
+                                    val url = file.getString("fileUrl")
+                                    if (url.endsWith(fileUrl)) {
+                                        val fileId = file.getString("id")
+                                        Log.d(TAG, "Found file ID by URL: $fileId")
+                                        currentPdfId = fileId
+                                        withContext(Dispatchers.Main) {
+                                            addToFavorites(fileId)
+                                        }
+                                        return
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Пробуем найти файл в других директориях
+                        findFileInAllDirectories(fileName)
+                        
+                    } else {
+                        Log.e(TAG, "Invalid response format: $responseBody")
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@PdfReaderActivity, "Некорректный ответ сервера", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Failed to get files list: ${response.code}")
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@PdfReaderActivity, "Ошибка поиска файла: ${response.code}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
-
+        } catch (e: Exception) {
+            Log.e(TAG, "Error finding file by name", e)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@PdfReaderActivity, "Ошибка поиска: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
-
-    private fun onHighlightListActivityResult(activityResult: ActivityResult?) {
-        if (activityResult != null) {
-            activityResult.data?.let { result ->
-                val deletedHighlights =
-                    result.getLongArrayExtra(BundleArguments.ARGS_DELETED_HIGHLIGHT_IDS)
-                        ?: LongArray(0)
-                if (deletedHighlights.isNotEmpty()) {
-                    viewModel.removeHighlight(deletedHighlights.toList())
-                    contentBinding.pdfView.removeHighlightAnnotations(deletedHighlights.toList())
-                }
-
-                if (result.action == HighlightListActivity.RESULT_ACTION_OPEN_HIGHLIGHT) {
-                    val highlight = result.getParcelableExtraVs(
-                        BundleArguments.ARGS_HIGHLIGHT,
-                        HighlightModel::class.java
-                    )
-                    if (highlight != null) {
-                        contentBinding.pdfView.jumpTo(highlight.page - 1) //Passing index
+    
+    private suspend fun findFileInAllDirectories(fileName: String) {
+        try {
+            // Получаем список директорий
+            val url = getServerUrl() + "/directories"
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+                
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val directoriesBody = response.body?.string() ?: "[]"
+                    val directoriesArray = JSONArray(directoriesBody)
+                    
+                    // Перебираем все директории и ищем в них файл
+                    for (i in 0 until directoriesArray.length()) {
+                        val directory = directoriesArray.getJSONObject(i)
+                        val directoryId = directory.getString("id")
+                        val directoryName = directory.getString("name")
+                        
+                        // Для каждой директории получаем список файлов
+                        val directoryUrl = getServerUrl() + "/directories/$directoryId/files"
+                        val directoryRequest = Request.Builder()
+                            .url(directoryUrl)
+                            .get()
+                            .build()
+                            
+                        client.newCall(directoryRequest).execute().use { directoryResponse ->
+                            if (directoryResponse.isSuccessful) {
+                                val filesBody = directoryResponse.body?.string() ?: "[]"
+                                val filesArray = JSONArray(filesBody)
+                                
+                                // Ищем файл с похожим именем
+                                val normalizedSearchName = normalizeFileName(fileName)
+                                
+                                for (j in 0 until filesArray.length()) {
+                                    val file = filesArray.getJSONObject(j)
+                                    val serverFileName = file.getString("name")
+                                    val normalizedServerName = normalizeFileName(serverFileName)
+                                    
+                                    // Считаем коэффициент схожести
+                                    val similarityScore = calculateSimilarity(normalizedSearchName, normalizedServerName)
+                                    
+                                    if (similarityScore > 0.6) {
+                                        val fileId = file.getString("id")
+                                        Log.d(TAG, "Found file in directory $directoryId ($directoryName): $fileId (name: $serverFileName, score: $similarityScore)")
+                                        
+                                        // Сохраняем ID файла
+                                        currentPdfId = fileId
+                                        
+                                        // Обновляем информацию о директории файла, если нужно
+                                        if (directoryId != "root") {
+                                            Log.d(TAG, "Updating file directory from 'root' to '$directoryId'")
+                                            updateFileDirectory(fileId, directoryId)
+                                        }
+                                        
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(
+                                                this@PdfReaderActivity, 
+                                                "Найден файл в директории: $directoryName", 
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            addToFavorites(fileId)
+                                        }
+                                        return
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    Log.d(TAG, "File not found in any directory")
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@PdfReaderActivity, "Файл не найден на сервере", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
-
+        } catch (e: Exception) {
+            Log.e(TAG, "Error searching in all directories", e)
+        }
+    }
+    
+    private fun normalizeFileName(fileName: String): String {
+        // Нормализуем имя файла для сравнения
+        return fileName
+            .replace(" ", "")
+            .replace("_", "")
+            .replace("-", "")
+            .replace(",", "")
+            .replace(".", "")
+            .replace("(", "")
+            .replace(")", "")
+            .toLowerCase()
+    }
+    
+    private fun calculateSimilarity(s1: String, s2: String): Double {
+        // Простая оценка схожести строк
+        if (s1 == s2) return 1.0
+        if (s1.isEmpty() || s2.isEmpty()) return 0.0
+        
+        // Если одна строка содержит другую
+        if (s1.contains(s2)) return s2.length.toDouble() / s1.length
+        if (s2.contains(s1)) return s1.length.toDouble() / s2.length
+        
+        // Находим общие символы
+        val commonChars = s1.filter { s2.contains(it) }.length
+        return commonChars.toDouble() / Math.max(s1.length, s2.length)
+    }
+    
+    private fun extractFileIdFromUrl(url: String): String? {
+        try {
+            // Пытаемся извлечь ID из URL формата "http://10.0.2.2:3000/uploads/pdfs/1742732751034-compressor_catalogue__1_.pdf"
+            Log.d(TAG, "Extracting ID from URL: $url")
+            
+            // Попробуем найти ID по регулярному выражению
+            val regex = "/uploads/pdfs/([0-9]+)-".toRegex()
+            val matchResult = regex.find(url)
+            if (matchResult != null) {
+                val extractedId = matchResult.groupValues[1]
+                Log.d(TAG, "Extracted ID from URL using regex: $extractedId")
+                return extractedId
+            }
+            
+            // Если регулярное выражение не подошло, попробуем другие методы
+            val urlParts = url.split("/")
+            if (urlParts.size > 1) {
+                val lastPart = urlParts.last()
+                val fileNameParts = lastPart.split("-")
+                
+                if (fileNameParts.isNotEmpty() && fileNameParts[0].all { it.isDigit() }) {
+                    Log.d(TAG, "Extracted ID from filename: ${fileNameParts[0]}")
+                    return fileNameParts[0]
+                }
+            }
+            
+            Log.d(TAG, "Could not extract ID from URL")
+            return null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error extracting ID from URL", e)
+            return null
+        }
+    }
+    
+    private suspend fun uploadLocalFile() {
+        // Для будущей реализации загрузки локальных файлов
+        // В текущей задаче это не требуется
+        withContext(Dispatchers.Main) {
+            Toast.makeText(this@PdfReaderActivity, "Загрузка локальных файлов не реализована", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun onBookmarkActivityResult(activityResult: ActivityResult?) {
-        if (activityResult != null) {
-            activityResult.data?.let { result ->
-                val deletedBookmarks =
-                    result.getLongArrayExtra(BundleArguments.ARGS_DELETED_BOOKMARK_IDS)
-                        ?: LongArray(0)
-                if (deletedBookmarks.isNotEmpty()) {
-                    viewModel.removeBookmarks(deletedBookmarks.toList())
+    private fun createFileId(): String? {
+        // Создаем ID файла на основе имени файла и текущего времени
+        return if (currentFileName != null) {
+            val timestamp = System.currentTimeMillis().toString()
+            // Используем timestamp как ID
+            timestamp
+        } else {
+            null
+        }
+    }
+
+    private fun checkFavoriteStatus(fileId: String) {
+        Log.d(TAG, "Checking favorite status for file ID: $fileId")
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val url = getServerUrl() + "/files/$fileId/favorite"
+                Log.d(TAG, "Sending GET request to: $url")
+                
+                val request = Request.Builder()
+                    .url(url)
+                    .get()
+                    .build()
+
+                try {
+                    client.newCall(request).execute().use { response ->
+                        val responseCode = response.code
+                        val responseBody = response.body?.string() ?: ""
+                        Log.d(TAG, "Response code: $responseCode, body: $responseBody")
+                        
+                        if (response.isSuccessful) {
+                            try {
+                                val jsonObject = JSONObject(responseBody)
+                                val isFavoriteResponse = jsonObject.getBoolean("isFavorite")
+                                Log.d(TAG, "Is favorite: $isFavoriteResponse")
+                                
+                                withContext(Dispatchers.Main) {
+                                    isFavorite = isFavoriteResponse
+                                    updateFavoriteButtonUI()
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error parsing favorite status", e)
+                                withContext(Dispatchers.Main) {
+                                    // Даже если не можем распарсить ответ, просто предполагаем, что файл не в избранном
+                                    isFavorite = false
+                                    updateFavoriteButtonUI()
+                                }
+                            }
+                        } else {
+                            Log.e(TAG, "Failed to check favorite status: $responseCode")
+                            withContext(Dispatchers.Main) {
+                                // По умолчанию считаем, что файл не в избранном
+                                isFavorite = false
+                                updateFavoriteButtonUI()
+                            }
+                        }
+                    }
+                } catch (e: java.net.ConnectException) {
+                    Log.e(TAG, "Server connection error during favorite check", e)
+                    withContext(Dispatchers.Main) {
+                        // По умолчанию считаем, что файл не в избранном
+                        isFavorite = false
+                        updateFavoriteButtonUI()
+                    }
+                } catch (e: java.net.SocketTimeoutException) {
+                    Log.e(TAG, "Server timeout error during favorite check", e)
+                    withContext(Dispatchers.Main) {
+                        // По умолчанию считаем, что файл не в избранном
+                        isFavorite = false
+                        updateFavoriteButtonUI()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking favorite status", e)
+                withContext(Dispatchers.Main) {
+                    // По умолчанию считаем, что файл не в избранном
+                    isFavorite = false
+                    updateFavoriteButtonUI()
+                }
+            }
+        }
+    }
+
+    private fun addToFavorites(fileId: String) {
+        Log.d(TAG, "Attempting to add file to favorites with ID: $fileId")
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Получаем информацию о файле перед добавлением в избранное
+                getFileInfo(fileId)
+                
+                val url = getServerUrl() + "/files/$fileId/favorite"
+                Log.d(TAG, "Sending PUT request to: $url")
+                
+                val request = Request.Builder()
+                    .url(url)
+                    .put(create(null, ByteArray(0)))
+                    .build()
+
+                try {
+                    client.newCall(request).execute().use { response ->
+                        val responseCode = response.code
+                        val responseBody = response.body?.string() ?: ""
+                        Log.d(TAG, "Response code: $responseCode, body: $responseBody")
+                        
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful) {
+                                isFavorite = true
+                                updateFavoriteButtonUI()
+                                Toast.makeText(this@PdfReaderActivity, "Добавлено в избранное", Toast.LENGTH_SHORT).show()
+                                
+                                // Отправляем событие о добавлении в избранное
+                                EventBus.getDefault().post(FavoriteUpdateEvent(true))
+                            } else if (responseCode == 404) {
+                                Log.d(TAG, "Server returned 404 for file ID: $fileId")
+                                
+                                // Глобальный поиск файла на сервере
+                                lifecycleScope.launch(Dispatchers.IO) {
+                                    // Сначала проверяем другие ID из URL
+                                    if (currentFilePath?.contains("/uploads/pdfs/") == true) {
+                                        val extractedId = extractFileIdFromUrl(currentFilePath!!)
+                                        if (extractedId != null && extractedId != fileId) {
+                                            Log.d(TAG, "Trying with extracted ID: $extractedId instead of $fileId")
+                                            currentPdfId = extractedId
+                                            addToFavorites(extractedId)
+                                            return@launch
+                                        }
+                                    }
+                                    
+                                    // Ищем любой файл с похожим именем
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(this@PdfReaderActivity, "Поиск файла на сервере...", Toast.LENGTH_SHORT).show()
+                                    }
+                                    findFileGlobally()
+                                }
+                            } else {
+                                Toast.makeText(this@PdfReaderActivity, "Ошибка при добавлении в избранное: $responseCode", Toast.LENGTH_SHORT).show()
+                                Log.e(TAG, "Failed to add to favorites: $responseCode, message: $responseBody")
+                            }
+                        }
+                    }
+                } catch (e: java.net.ConnectException) {
+                    Log.e(TAG, "Server connection error", e)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@PdfReaderActivity, "Сервер недоступен, попробуйте зайти в другое время", Toast.LENGTH_LONG).show()
+                    }
+                } catch (e: java.net.SocketTimeoutException) {
+                    Log.e(TAG, "Server timeout error", e)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@PdfReaderActivity, "Сервер не отвечает, попробуйте зайти в другое время", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error adding to favorites", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@PdfReaderActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    
+    private suspend fun getFileInfo(fileId: String) {
+        try {
+            val url = getServerUrl() + "/files/$fileId"
+            Log.d(TAG, "Getting file info for ID: $fileId")
+            
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+                
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    Log.d(TAG, "File info response: $responseBody")
+                    
+                    if (responseBody != null && responseBody.isNotEmpty()) {
+                        try {
+                            val fileInfo = JSONObject(responseBody)
+                            if (fileInfo.has("directoryId")) {
+                                val directoryId = fileInfo.getString("directoryId")
+                                Log.d(TAG, "File directoryId: $directoryId")
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error parsing file info", e)
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Failed to get file info: ${response.code}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting file info", e)
+        }
+    }
+
+    private suspend fun findFileGlobally() {
+        try {
+            // Если у нас есть имя файла, пробуем найти по нему
+            if (!currentFileName.isNullOrEmpty()) {
+                Log.d(TAG, "Searching for file by name: $currentFileName")
+                findFileIdByName(currentFileName!!)
+            } else if (currentFilePath != null) {
+                // Если нет имени, но есть путь, получаем имя из пути
+                val fileName = currentFilePath!!.substringAfterLast("/")
+                if (fileName.isNotEmpty()) {
+                    Log.d(TAG, "Searching for file by path-derived name: $fileName")
+                    findFileIdByName(fileName)
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@PdfReaderActivity, "Не удается определить имя файла", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@PdfReaderActivity, "Недостаточно данных для поиска файла", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in global file search", e)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@PdfReaderActivity, "Ошибка при глобальном поиске: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun removeFromFavorites(fileId: String) {
+        Log.d(TAG, "Attempting to remove file from favorites with ID: $fileId")
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val url = getServerUrl() + "/files/$fileId/favorite"
+                Log.d(TAG, "Sending DELETE request to: $url")
+                
+                val request = Request.Builder()
+                    .url(url)
+                    .delete()
+                    .build()
+
+                try {
+                    client.newCall(request).execute().use { response ->
+                        val responseCode = response.code
+                        val responseBody = response.body?.string() ?: ""
+                        Log.d(TAG, "Response code: $responseCode, body: $responseBody")
+                        
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful) {
+                                isFavorite = false
+                                updateFavoriteButtonUI()
+                                Toast.makeText(this@PdfReaderActivity, "Удалено из избранного", Toast.LENGTH_SHORT).show()
+                                
+                                // Отправляем событие об удалении из избранного
+                                EventBus.getDefault().post(FavoriteUpdateEvent(false))
+                            } else {
+                                Toast.makeText(this@PdfReaderActivity, "Ошибка при удалении из избранного: $responseCode", Toast.LENGTH_SHORT).show()
+                                Log.e(TAG, "Failed to remove from favorites: $responseCode, message: $responseBody")
+                            }
+                        }
+                    }
+                } catch (e: java.net.ConnectException) {
+                    Log.e(TAG, "Server connection error", e)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@PdfReaderActivity, "Сервер недоступен, попробуйте зайти в другое время", Toast.LENGTH_LONG).show()
+                    }
+                } catch (e: java.net.SocketTimeoutException) {
+                    Log.e(TAG, "Server timeout error", e)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@PdfReaderActivity, "Сервер не отвечает, попробуйте зайти в другое время", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error removing from favorites", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@PdfReaderActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun updateFavoriteButtonUI() {
+        try {
+            favoriteButton.setColorFilter(
+                if (isFavorite) android.graphics.Color.YELLOW 
+                else android.graphics.Color.TRANSPARENT
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating favorite button UI", e)
+        }
+    }
+
+    private fun downloadAndOpenPdf(pdfUrl: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val fileName = pdfUrl.substringAfterLast("/")
+                val cachedFile = File(cacheDir, fileName)
+
+                if (cachedFile.exists() && cachedFile.length() > 0) {
+                    Log.d(TAG, "Using cached file: ${cachedFile.absolutePath}")
+                    withContext(Dispatchers.Main) {
+                        pdfFile = cachedFile
+                        openPdfFile()
+                    }
+                    return@launch
                 }
 
-                if (result.action == BookmarkListActivity.RESULT_ACTION_OPEN_BOOKMARK) {
-                    val bookmark = result.getParcelableExtraVs(
-                        BundleArguments.ARGS_BOOKMARK,
-                        BookmarkModel::class.java
-                    )
-                    if (bookmark != null) {
-                        contentBinding.pdfView.jumpTo(bookmark.page - 1) //Passing index
+                Log.d(TAG, "Starting download from URL: $pdfUrl")
+                val request = Request.Builder()
+                    .url(pdfUrl)
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    val responseCode = response.code
+                    Log.d(TAG, "Download response code: $responseCode")
+                    
+                    if (!response.isSuccessful) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@PdfReaderActivity, "Ошибка загрузки: $responseCode", Toast.LENGTH_SHORT).show()
+                        }
+                        throw IOException("Download failed with code: ${response.code}")
+                    }
+
+                    val body = response.body ?: throw IOException("Empty response body")
+                    val contentLength = body.contentLength()
+                    Log.d(TAG, "File size to download: $contentLength bytes")
+
+                    FileOutputStream(cachedFile).use { output ->
+                        val buffer = ByteArray(BUFFER_SIZE)
+                        var totalBytesRead = 0L
+
+                        body.byteStream().use { input ->
+                            var bytesRead: Int
+                            while (input.read(buffer).also { bytesRead = it } != -1) {
+                                output.write(buffer, 0, bytesRead)
+                                totalBytesRead += bytesRead
+                                val progress = if (contentLength > 0) {
+                                    (totalBytesRead * 100 / contentLength).toInt()
+                                } else {
+                                    -1
+                                }
+                                if (progress % 10 == 0 || totalBytesRead == contentLength) {
+                                    Log.d(TAG, "Download progress: $progress% ($totalBytesRead/$contentLength bytes)")
+                                }
+                            }
+                        }
+                    }
+
+                    Log.d(TAG, "Download completed, file saved to: ${cachedFile.absolutePath}")
+                    
+                    // Если до сих пор не имеем ID, попробуем найти его по URL
+                    if (currentPdfId == null) {
+                        Log.d(TAG, "No ID yet, checking if file exists on server")
+                        // Проверим, существует ли такой файл на сервере
+                        val fileListUrl = getServerUrl() + "/directories/root/files"
+                        val listRequest = Request.Builder()
+                            .url(fileListUrl)
+                            .get()
+                            .build()
+                            
+                        client.newCall(listRequest).execute().use { listResponse ->
+                            if (listResponse.isSuccessful) {
+                                val listBody = listResponse.body?.string() ?: "[]"
+                                val jsonArray = JSONObject("{ \"files\": $listBody }").getJSONArray("files")
+                                val fileNameToMatch = fileName
+                                
+                                for (i in 0 until jsonArray.length()) {
+                                    val file = jsonArray.getJSONObject(i)
+                                    val fileUrl = file.getString("fileUrl")
+                                    if (fileUrl.endsWith(fileNameToMatch)) {
+                                        currentPdfId = file.getString("id")
+                                        Log.d(TAG, "Found file ID: $currentPdfId for URL: $fileUrl")
+                                        withContext(Dispatchers.Main) {
+                                            checkFavoriteStatus(currentPdfId!!)
+                                        }
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    if (cachedFile.exists() && cachedFile.length() > 0) {
+                        Log.d(TAG, "Opening downloaded file")
+                        pdfFile = cachedFile
+                        openPdfFile()
+                    } else {
+                        Log.e(TAG, "Downloaded file is invalid")
+                        finish()
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error downloading PDF", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@PdfReaderActivity, "Error downloading PDF: ${e.message}", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+        }
+    }
+
+    private fun openPdfFile() {
+        try {
+            pdfFile?.let { file ->
+                if (!file.exists()) {
+                    Log.e(TAG, "PDF file does not exist: ${file.path}")
+                    Toast.makeText(this, "PDF file not found", Toast.LENGTH_SHORT).show()
+                    finish()
+                    return
+                }
+
+                Log.d(TAG, "Opening PDF file: ${file.absolutePath}, size: ${file.length()} bytes")
+                pdfView.loadPdf(file)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error opening PDF file", e)
+            Toast.makeText(this, "Error opening PDF: ${e.message}", Toast.LENGTH_SHORT).show()
+            finish()
+        }
+    }
+
+    private suspend fun updateFileDirectory(fileId: String, foundInDirectoryId: String?) {
+        if (foundInDirectoryId == null || foundInDirectoryId == "root") {
+            // Не нужно обновлять, если директория root или не указана
+            return
+        }
+
+        try {
+            // Обновляем directoryId файла на сервере
+            val url = getServerUrl() + "/files/$fileId/move"
+            Log.d(TAG, "Updating file directoryId to: $foundInDirectoryId (file ID: $fileId)")
+            
+            // Создаем JSON с новой директорией
+            val jsonBody = JSONObject().apply {
+                put("newDirectoryId", foundInDirectoryId)
+            }
+            
+            val mediaType = "application/json; charset=utf-8".toMediaType()
+            val requestBody = jsonBody.toString().toRequestBody(mediaType)
+
+            val request = Request.Builder()
+                .url(url)
+                .put(requestBody)
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                val responseCode = response.code
+                val responseBody = response.body?.string() ?: ""
+                Log.d(TAG, "Directory update response: $responseCode, body: $responseBody")
+                
+                if (!response.isSuccessful) {
+                    Log.e(TAG, "Failed to update file directory: $responseCode, $responseBody")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating file directory", e)
+        }
+    }
+
+    private fun showOptionsMenu(view: View) {
+        val popup = PopupMenu(this, view)
+        popup.menuInflater.inflate(R.menu.pdf_reader_options_menu, popup.menu)
+        
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_save -> {
+                    downloadCurrentPdf()
+                    true
+                }
+                R.id.action_share -> {
+                    shareCurrentPdf()
+                    true
+                }
+                else -> false
+            }
+        }
+        
+        popup.show()
+    }
+
+    private fun downloadCurrentPdf() {
+        try {
+            // Используем корректные ключи и проверяем локальный файл
+            val pdfUrl = intent.getStringExtra(EXTRA_PDF_FILE_PATH)
+            val fileName = intent.getStringExtra(EXTRA_PDF_FILE_NAME) ?: "document.pdf"
+            
+            if (pdfUrl == null) {
+                Log.e(TAG, "URL файла отсутствует")
+                Snackbar.make(binding.root, "Не удалось получить URL файла", Snackbar.LENGTH_LONG).show()
+                return
+            }
+            
+            // Сначала проверим, есть ли у нас уже локальный файл
+            if (pdfFile != null && pdfFile!!.exists()) {
+                // Копируем файл в папку загрузок
+                val targetFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName)
+                pdfFile!!.copyTo(targetFile, overwrite = true)
+                
+                Snackbar.make(binding.root, "Файл сохранен в папку загрузок", Snackbar.LENGTH_LONG).show()
+                return
+            }
+
+            val request = DownloadManager.Request(Uri.parse(pdfUrl))
+                .setTitle("Загрузка $fileName")
+                .setDescription("Загрузка PDF файла")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(true)
+
+            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            downloadManager.enqueue(request)
+            
+            Snackbar.make(binding.root, "Загрузка файла начата", Snackbar.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Ошибка при загрузке файла", e)
+            Snackbar.make(binding.root, "Ошибка при загрузке файла: ${e.message}", Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun shareCurrentPdf() {
+        try {
+            // Если у нас уже есть локальный файл, используем его
+            if (pdfFile != null && pdfFile!!.exists()) {
+                shareLocalFile(pdfFile!!, currentFileName ?: "document.pdf")
+                return
+            }
+            
+            val pdfUrl = intent.getStringExtra(EXTRA_PDF_FILE_PATH)
+            val fileName = currentFileName ?: intent.getStringExtra(EXTRA_PDF_FILE_NAME) ?: "document.pdf"
+            
+            if (pdfUrl == null) {
+                Log.e(TAG, "URL файла отсутствует")
+                Snackbar.make(binding.root, "Не удалось получить URL файла", Snackbar.LENGTH_LONG).show()
+                return
+            }
+
+            // Показываем индикатор загрузки
+            val progressDialog = ProgressDialog(this).apply {
+                setTitle("Подготовка файла")
+                setMessage("Пожалуйста, подождите...")
+                setCancelable(false)
+                show()
+            }
+
+            // Скачиваем файл во временную директорию
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val tempFile = File(cacheDir, fileName)
+                    
+                    val request = Request.Builder()
+                        .url(pdfUrl)
+                        .build()
+                    
+                    val response = client.newCall(request).execute()
+                    
+                    if (response.isSuccessful) {
+                        response.body?.byteStream()?.use { input ->
+                            FileOutputStream(tempFile).use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                        
+                        withContext(Dispatchers.Main) {
+                            progressDialog.dismiss()
+                            shareLocalFile(tempFile, fileName)
+                        }
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            progressDialog.dismiss()
+                            Snackbar.make(binding.root, 
+                                "Ошибка при загрузке файла: ${response.code}", 
+                                Snackbar.LENGTH_LONG).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Ошибка при шеринге файла", e)
+                    withContext(Dispatchers.Main) {
+                        progressDialog.dismiss()
+                        Snackbar.make(binding.root, 
+                            "Ошибка при загрузке файла: ${e.message}", 
+                            Snackbar.LENGTH_LONG).show()
                     }
                 }
             }
-
+        } catch (e: Exception) {
+            Log.e(TAG, "Ошибка при подготовке к шерингу", e)
+            Snackbar.make(binding.root, "Ошибка: ${e.message}", Snackbar.LENGTH_LONG).show()
+        }
+    }
+    
+    private fun shareLocalFile(file: File, fileName: String) {
+        try {
+            // Создаем URI с использованием FileProvider
+            val fileUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                FileProvider.getUriForFile(
+                    this,
+                    "${packageName}.fileprovider",
+                    file
+                )
+            } else {
+                Uri.fromFile(file)
+            }
+            
+            // Создаем интент для шеринга
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_STREAM, fileUri)
+                type = "application/pdf"
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            
+            startActivity(Intent.createChooser(shareIntent, "Поделиться файлом"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Ошибка при шеринге локального файла", e)
+            Snackbar.make(binding.root, "Ошибка при отправке файла: ${e.message}", Snackbar.LENGTH_LONG).show()
         }
     }
 
-    private fun updateBookmarkInfo(currentPage: Int) {
-        val isBookmarked =
-            viewModel.annotations.bookmarks.indexOfFirst { it.page == currentPage } != -1
-        contentBinding.cbBookmark.isChecked = isBookmarked
-    }
-
-    private fun showPageNumber(currentPage: Int) {
-        val totalPage = contentBinding.pdfView.getTotalPage()
-        val pageInfo = "$currentPage/$totalPage"
-        contentBinding.tvPageInfo.text = pageInfo
-        contentBinding.tvPageInfo.removeCallbacks(hidePageInfoRunnable)
-        contentBinding.tvPageInfo.visibility = View.VISIBLE
-        contentBinding.tvPageInfo.postDelayed(hidePageInfoRunnable, 10000)
-    }
-
-    private val hidePageInfoRunnable = Runnable {
-        contentBinding.tvPageInfo.visibility = View.GONE
+    override fun onDestroy() {
+        super.onDestroy()
+        client.dispatcher.executorService.shutdown()
+        client.connectionPool.evictAll()
     }
 }
+
+
+
 
 

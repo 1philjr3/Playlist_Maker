@@ -1,8 +1,10 @@
 package com.practicum.playlist_maker.settings.ui.activity
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +13,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.auth.FirebaseAuth
@@ -19,6 +22,7 @@ import com.practicum.playlist_maker.databinding.FragmentSettingsBinding
 import com.practicum.playlist_maker.marchAuto.ActivityLogin
 import com.practicum.playlist_maker.settings.ui.view_model.SettingsViewModel
 import com.practicum.playlist_maker.settings.ui.view_model.UserProfileViewModel
+import com.practicum.playlist_maker.settings.ui.view_model.UserProfileViewModelFactory
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
@@ -31,7 +35,7 @@ class SettingsFragment : Fragment() {
     private var logoutButton: View? = null // Новая кнопка
 
     private val viewModel: SettingsViewModel by viewModel<SettingsViewModel>()
-    private val userProfileViewModel: UserProfileViewModel by viewModels()
+    private lateinit var userProfileViewModel: UserProfileViewModel
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
@@ -42,20 +46,26 @@ class SettingsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        // Создаем фабрику для UserProfileViewModel
+        val factory = UserProfileViewModelFactory(requireActivity().application)
+        userProfileViewModel = ViewModelProvider(this, factory)[UserProfileViewModel::class.java]
         return binding.root
     }
 
     private fun observeUserData() {
         userProfileViewModel.userName.observe(viewLifecycleOwner) { name ->
-            println("Имя пользователя: $name")
+            binding.profileName.text = name
+            Log.d("SettingsFragment", "Обновляем имя пользователя: $name")
         }
 
         userProfileViewModel.userEmail.observe(viewLifecycleOwner) { email ->
             binding.profileEmail.text = email
+            Log.d("SettingsFragment", "Обновляем email пользователя: $email")
         }
 
         userProfileViewModel.userInstitute.observe(viewLifecycleOwner) { institute ->
             binding.profileInstitute.text = institute
+            Log.d("SettingsFragment", "Обновляем отдел пользователя: $institute")
         }
     }
 
@@ -63,11 +73,24 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initViews()
+        
+        // Вывод текущих значений в дебаг
+        Log.d("SettingsFragment", "Текущее имя: ${binding.profileName.text}")
+        Log.d("SettingsFragment", "Текущий email: ${binding.profileEmail.text}")
+        Log.d("SettingsFragment", "Текущий отдел: ${binding.profileInstitute.text}")
+        
+        // Загрузка данных пользователя и подписка на обновления
         observeUserData()
-
-        // Загрузка данных пользователя
         userProfileViewModel.loadUserData()
-
+        
+        // Проверяем SharedPreferences напрямую
+        val sharedPreferences = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val name = sharedPreferences.getString("name", null)
+        val email = sharedPreferences.getString("email", null)
+        val institute = sharedPreferences.getString("institute", null)
+        
+        Log.d("SettingsFragment", "Значения в SharedPreferences: name=$name, email=$email, institute=$institute")
+        
         shareButton?.setOnClickListener {
             val intent = Intent(Intent.ACTION_SEND)
             intent.type = "text/plain"
@@ -115,6 +138,14 @@ class SettingsFragment : Fragment() {
     private fun handleLogout() {
         // Выход из Firebase Auth
         FirebaseAuth.getInstance().signOut()
+
+        // Очистка данных о сохраненной сессии
+        val sharedPreferences = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        with (sharedPreferences.edit()) {
+            remove("token")
+            putBoolean("is_logged_in", false)
+            apply()
+        }
 
         // Возврат на экран авторизации
         val intent = Intent(requireContext(), ActivityLogin::class.java)

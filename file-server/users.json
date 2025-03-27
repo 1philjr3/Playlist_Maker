@@ -1,0 +1,26 @@
+[
+  {
+    "email": "wert@mail.com",
+    "password": "$2a$10$tFdRL/V16Xvhq3W8RoSvB.V0oRVFE3iZYFdVC/5JExb2nsTTvwxKu",
+    "name": "Флийчук",
+    "department": "pnr",
+    "isApproved": true,
+    "createdAt": "2025-03-26T09:23:56.231Z"
+  },
+  {
+    "email": "off@mail.com",
+    "password": "$2a$10$YXDaJ5ib8r684bXNF/qP.ObcRb9rKJZoMtPyAajPN9jGw9IRp/baC",
+    "name": "Флийчук Миша",
+    "department": "ПНР",
+    "isApproved": true,
+    "createdAt": "2025-03-26T10:55:17.835Z"
+  },
+  {
+    "email": "qwertyred@mail.ru",
+    "password": "$2a$10$xYI6etW2nQ/.mBLnTXsQq.ajw6FIZmrxJueDFXeyHQKrZ3Gu9Saya",
+    "name": "Anton",
+    "department": "PNR",
+    "isApproved": true,
+    "createdAt": "2025-03-26T10:57:43.369Z"
+  }
+]

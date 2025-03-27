@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black_and_white">#FFFFFF</color>
-    <color name="white_and_black">#1A1B22</color>
+    <!-- Theme colors for dark theme -->
+    <color name="background_color">#1A1B22</color>
+    <color name="text_color">#FFFFFF</color>
+    <color name="card_background">#2A2B31</color>
+    <color name="card_stroke">#404040</color>
+    <color name="selected_item_background">#1AFFFFFF</color>
+    <color name="toolbar_background">#1A1B22</color>
+    <color name="toolbar_text">@color/white</color>
+    <color name="directory_item_text">@color/white</color>
+    <color name="directory_item_description">#AAAAAA</color>
+    <color name="dialog_positive_button">@color/blue_light</color>
+    <color name="dialog_negative_button">@color/white</color>
 </resources>

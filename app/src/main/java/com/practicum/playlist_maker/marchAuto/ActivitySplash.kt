@@ -6,6 +6,8 @@ import android.os.Handler
 import android.os.Looper
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
+import com.practicum.playlist_maker.R
 import com.practicum.playlist_maker.databinding.ActivitySplashBinding
 import com.practicum.playlist_maker.marchAuto.model.AuthViewModel
 import com.practicum.playlist_maker.pdfreader.ui.activity.home.HomeFragment
@@ -21,12 +23,21 @@ class ActivitySplash : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        // Загружаем GIF-анимацию с персонажем
+        Glide.with(this)
+            .asGif()
+            .load(R.raw.peanut_loading)
+            .into(binding.gifImageView)
+        
+        binding.gifImageView.visibility = android.view.View.VISIBLE
+        binding.progressBar.visibility = android.view.View.GONE
 
         authViewModel.firebaseUser.observe(this) { user ->
             if (user != null) {
                 Handler(Looper.getMainLooper()).postDelayed({
                     navigateToActivity(RootActivity::class.java)
-                }, 500)
+                }, 2500) // Увеличиваем задержку для лучшего отображения анимации
             } else {
                 navigateToActivity(ActivityLogin::class.java)
             }

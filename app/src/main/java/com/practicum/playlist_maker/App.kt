@@ -1,6 +1,7 @@
 package com.practicum.playlist_maker
 
 import android.app.Application
+import android.util.Log
 import androidx.room.Room
 import com.google.firebase.FirebaseApp
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
@@ -19,6 +20,7 @@ import com.practicum.playlist_maker.settings.di.settingsInteractorModule
 import com.practicum.playlist_maker.settings.di.settingsRepositoryModule
 import com.practicum.playlist_maker.settings.di.settingsViewModelModule
 import com.practicum.playlist_maker.settings.domain.api.SettingsInteractor
+import com.practicum.playlist_maker.network.AppContextProvider
 import dagger.hilt.android.HiltAndroidApp
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -37,6 +39,11 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        
+        // Инициализация AppContextProvider - должна быть самой первой!
+        Log.d("App", "Initializing AppContextProvider")
+        AppContextProvider.appContext = applicationContext
+        
         FirebaseApp.initializeApp(this)
 
         // Инициализация PDFBox

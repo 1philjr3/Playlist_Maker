@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_create_directory"
+        android:icon="@drawable/ic_folder"
+        android:title="Создать директорию" />
+    <item
+        android:id="@+id/action_add_pdf"
+        android:icon="@drawable/ic_pdf_vector"
+        android:title="Добавить PDF" />
+</menu> 

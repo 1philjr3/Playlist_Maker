@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/readingFragment">
+
+    <!-- ReadingFragment -->
+    <fragment
+        android:id="@+id/readingFragment"
+        android:name="com.practicum.playlist_maker.mediaLibrary.ui.activity.ReadingFragment"
+        tools:layout="@layout/fragment_reading">
+
+        <!-- Действие для перехода к FilesFragment -->
+        <action
+            android:id="@+id/action_readingFragment_to_filesFragment"
+            app:destination="@id/filesFragment" />
+    </fragment>
+
+    <!-- FilesFragment -->
+    <fragment
+        android:id="@+id/filesFragment"
+        android:name="com.practicum.playlist_maker.mediaLibrary.ui.activity.FilesFragment"
+        tools:layout="@layout/fragment_files">
+
+        <!-- Аргумент для передачи ID директории -->
+        <argument
+            android:name="directoryId"
+            app:argType="string" />
+    </fragment>
+</navigation>

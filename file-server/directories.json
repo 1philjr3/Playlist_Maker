@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1742743369649",
+    "name": "аллоппоалплплп",
+    "description": "апривет",
+    "imageUrl": "/uploads/images/1742743369604-1000000042.jpg",
+    "parentId": null
+  },
+  {
+    "id": "1742793082394",
+    "name": "wed",
+    "description": "",
+    "imageUrl": "/uploads/images/1742793082366-1000000042.jpg",
+    "parentId": null
+  },
+  {
+    "id": "1742990232695",
+    "name": "frfrf",
+    "description": "rfrfrfrfrfrfrf",
+    "imageUrl": "/uploads/images/1742990232674-1000000042.jpg",
+    "parentId": "1742793082394"
+  }
+]

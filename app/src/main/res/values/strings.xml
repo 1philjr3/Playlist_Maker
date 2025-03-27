@@ -108,6 +108,9 @@
     <string name="sign_up_now">Зарегистрироваться</string>
     <string name="sign_up_to_get_started">Добро пожаловать! Чтобы начать работу и воспользоваться справочником, пожалуйста, сделайте вход.</string>
     <string name="welcome">Добро пожаловать!</string>
-
+    <string name="pdf_viewer">PDF Просмотр</string>
+    <string name="back">Назад</string>
+    <string name="previous_result">Предыдущий результат</string>
+    <string name="next_result">Следующий результат</string>
 
 </resources>

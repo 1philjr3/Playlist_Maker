@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Административная панель - Добавление пользователей</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .alert {
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Добавление нового пользователя</h1>
+        
+        <div id="response-message" style="display: none;"></div>
+        
+        <form id="add-user-form">
+            <div class="form-group">
+                <label for="name">ФИО:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="department">Отдел:</label>
+                <input type="text" id="department" name="department" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="admin-key">Административный ключ:</label>
+                <input type="password" id="admin-key" name="admin-key" required>
+            </div>
+            
+            <button type="submit">Добавить пользователя</button>
+        </form>
+    </div>
+    
+    <script>
+        // Базовый URL сервера
+        const SERVER_URL = 'http://172.17.3.10:3000';
+
+        document.getElementById('add-user-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const department = document.getElementById('department').value;
+            const password = document.getElementById('password').value;
+            const adminKey = document.getElementById('admin-key').value;
+            
+            fetch(`${SERVER_URL}/admin/add-user`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Admin-Key': adminKey
+                },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    department,
+                    password
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const messageElement = document.getElementById('response-message');
+                messageElement.style.display = 'block';
+                
+                if (data.error) {
+                    messageElement.className = 'alert alert-danger';
+                    messageElement.textContent = data.error;
+                } else {
+                    messageElement.className = 'alert alert-success';
+                    messageElement.textContent = 'Пользователь успешно добавлен';
+                    
+                    // Очистить форму после успешного добавления
+                    document.getElementById('add-user-form').reset();
+                }
+            })
+            .catch(error => {
+                const messageElement = document.getElementById('response-message');
+                messageElement.style.display = 'block';
+                messageElement.className = 'alert alert-danger';
+                messageElement.textContent = 'Произошла ошибка при отправке запроса: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html> 

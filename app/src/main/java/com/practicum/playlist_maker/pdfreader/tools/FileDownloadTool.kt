@@ -26,13 +26,13 @@ object FileDownloadTool {
 
                 if (!response.isSuccessful) {
                     withContext(Dispatchers.Main) {
-                        callback?.onDownloadFailed(response.message())
+                        callback?.onDownloadFailed(response.message)
                     }
                     return@withContext
                 }
 
 
-                val responseBody = response.body()?: throw Exception("Failed to get data")
+                val responseBody = response.body ?: throw Exception("Failed to get data")
                 val contentLength = responseBody.contentLength().toDouble()
                 val inputStream = responseBody.byteStream()
                 val outputStream = FileOutputStream(tempFile)
