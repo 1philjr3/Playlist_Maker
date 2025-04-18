@@ -11,68 +11,80 @@
     app:strokeWidth="1dp"
     app:strokeColor="#DDDDDD">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
-
-        <ImageView
-            android:id="@+id/ivPdfIcon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_pdf"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tvFileName"
-            android:layout_width="0dp"
+        android:orientation="vertical">
+        
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="8dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toStartOf="@id/tvFileSize"
-            app:layout_constraintStart_toEndOf="@id/ivPdfIcon"
-            app:layout_constraintTop_toTopOf="@id/ivPdfIcon" />
+            android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvFileSize"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/directory_item_description"
-            android:textSize="12sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/tvFileName" />
+            <ImageView
+                android:id="@+id/ivPdfIcon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_pdf"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tvLastOpened"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="@color/directory_item_description"
-            android:textSize="12sp"
-            app:layout_constraintEnd_toStartOf="@id/ivDownload"
-            app:layout_constraintStart_toStartOf="@id/tvFileName"
-            app:layout_constraintTop_toBottomOf="@id/tvFileName" />
+            <TextView
+                android:id="@+id/tvFileName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toStartOf="@id/tvFileSize"
+                app:layout_constraintStart_toEndOf="@id/ivPdfIcon"
+                app:layout_constraintTop_toTopOf="@id/ivPdfIcon" />
 
-        <ImageView
-            android:id="@+id/ivDownload"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:contentDescription="Скачать файл"
-            android:focusable="true"
-            android:src="@android:drawable/ic_menu_save"
-            android:tint="@color/directory_item_description"
-            app:layout_constraintBottom_toBottomOf="@id/tvLastOpened"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/tvLastOpened" />
+            <TextView
+                android:id="@+id/tvFileSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/directory_item_description"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvFileName" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <TextView
+                android:id="@+id/tvLastOpened"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/directory_item_description"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@id/ivDownload"
+                app:layout_constraintStart_toStartOf="@id/tvFileName"
+                app:layout_constraintTop_toBottomOf="@id/tvFileName" />
+
+            <ImageView
+                android:id="@+id/ivDownload"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="Скачать файл"
+                android:focusable="true"
+                android:src="@android:drawable/ic_menu_save"
+                android:tint="@color/directory_item_description"
+                app:layout_constraintBottom_toBottomOf="@id/tvLastOpened"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvLastOpened" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/card_stroke" />
+            
+    </LinearLayout>
 
 </androidx.cardview.widget.CardView> 

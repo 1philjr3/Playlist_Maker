@@ -5,13 +5,13 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/main_color"
+    android:background="@color/background_color"
     tools:context=".search.ui.activity.SearchFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/main_color">
+        android:background="@color/background_color">
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
@@ -34,7 +34,7 @@
                     android:fontFamily="@font/ys_display_bold"
                     android:includeFontPadding="false"
                     android:text="@string/search_pdf"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnBackground"
                     android:textSize="20sp" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
@@ -42,8 +42,8 @@
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="30dp"
-                android:layout_marginBottom="10dp">
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="16dp">
 
                 <androidx.appcompat.widget.LinearLayoutCompat
                     android:layout_width="0dp"
@@ -64,7 +64,7 @@
                         android:maxLines="1"
                         android:minHeight="50dp"
                         android:paddingHorizontal="15dp"
-                        android:textColor="@color/black"
+                        android:textColor="?attr/colorOnBackground"
                         android:textColorHint="@color/hint_color"
                         android:textSize="14sp" />
 
@@ -75,7 +75,7 @@
                         android:background="@null"
                         android:padding="10dp"
                         android:src="@drawable/ic_search_white"
-                        android:tint="@color/black" />
+                        android:tint="?attr/colorOnBackground" />
                 </androidx.appcompat.widget.LinearLayoutCompat>
 
             </androidx.appcompat.widget.LinearLayoutCompat>
@@ -87,15 +87,47 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
+        android:background="@color/background_color"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvHistoryTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ys_display_bold"
+            android:padding="16dp"
+            android:text="История поиска"
+            android:textColor="?attr/colorOnBackground"
+            android:textSize="18sp"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSearchHistory"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/btnClearHistory"
+            android:layout_below="@+id/tvHistoryTitle"
+            android:padding="8dp"
+            android:clipToPadding="false"
+            android:visibility="gone" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvPdfList"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_above="@+id/btnClearHistory"
+            android:padding="8dp"
+            android:clipToPadding="false"
             tools:listitem="@layout/adapter_pdf_list" />
+            
+        <!-- Unified RecyclerView for all search results (directories and files) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/unifiedSearchResultsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/btnClearHistory"
+            android:clipToPadding="false"
+            android:padding="8dp" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvError"
@@ -105,7 +137,7 @@
             android:fontFamily="@font/ys_display_bold"
             android:includeFontPadding="false"
             android:text="Поиск не удался"
-            android:textColor="@color/black"
+            android:textColor="?attr/colorOnBackground"
             android:textSize="16sp"
             android:visibility="gone" />
 
@@ -114,7 +146,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
+            android:indeterminateTint="?attr/colorOnBackground"
             android:visibility="gone" />
+            
+        <TextView
+            android:id="@+id/errorText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_red_light"
+            android:visibility="gone"
+            android:textSize="16sp"
+            android:layout_centerInParent="true" />
 
         <Button
             android:id="@+id/btnClearHistory"
@@ -122,8 +164,6 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_margin="16dp"
-            android:textColor="@color/white"
-            android:visibility="visible"
             style="@style/searchButtonsStyle"
             android:layout_marginTop="@dimen/common_padding"
             android:layout_marginBottom="@dimen/common_padding"

@@ -43,7 +43,8 @@ class PdfRepositoryImpl @Inject constructor(
                     filePath,
                     about,
                     tagId,
-                    System.currentTimeMillis()
+                    System.currentTimeMillis(),
+                    false // По умолчанию PDF не является избранным
                 )
 
                 val id = dao.addPdfNote(pdfEntry)
@@ -57,7 +58,7 @@ class PdfRepositoryImpl @Inject constructor(
                         tagModel,
                         about,
                         filePath,
-                        pdfEntry.updateAt
+                        pdfEntry.updatedAt
                     )
                     return@withContext ResponseState.Success<PdfNoteListModel>(model)
                 }
@@ -82,7 +83,7 @@ class PdfRepositoryImpl @Inject constructor(
                         tagModel,
                         it.about,
                         it.filePath,
-                        it.updateAt
+                        it.updatedAt
                     )
                 }
                 return@withContext ResponseState.Success<PdfNotesResponse>(PdfNotesResponse(pdfNotes))
@@ -420,6 +421,32 @@ class PdfRepositoryImpl @Inject constructor(
                 )
             } catch (e: Exception) {
                 return@withContext ResponseState.Failed(e.message ?: "Something went wrong")
+            }
+        }
+    }
+
+    override suspend fun getFavoritePdfs(): ResponseState {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Здесь получаем только избранные PDF из локальной базы данных
+                val notes = dao.getFavoritePdfNotes()
+                val pdfNotes = notes.map {
+                    val tagModel = it.tagId?.let {tagId-> dao.getTagById(tagId) }?.let { tag->
+                        TagModel(tag.id ?: -1, tag.title, tag.colorCode)
+                    }
+                    PdfNoteListModel(
+                        it.id?:-1,
+                        it.title,
+                        tagModel,
+                        it.about,
+                        it.filePath,
+                        it.updatedAt
+                    )
+                }
+                return@withContext ResponseState.Success<PdfNotesResponse>(PdfNotesResponse(pdfNotes))
+
+            } catch (e: Exception) {
+                return@withContext ResponseState.Failed(e.message ?: "Unable to load favorite PDFs")
             }
         }
     }

@@ -71,9 +71,9 @@ class PdfReaderActivity : AppCompatActivity() {
                     android.os.Build.MODEL.contains("Android SDK")
             
             return if (isEmulator) {
-                "http://10.0.2.2:3000"
+                "http://172.17.3.66:3000"
             } else {
-                "http://192.168.0.105:3000"
+                "http://172.17.3.66:3000"
             }
         }
     }
@@ -655,11 +655,16 @@ class PdfReaderActivity : AppCompatActivity() {
         Log.d(TAG, "Checking favorite status for file ID: $fileId")
         lifecycleScope.launch(Dispatchers.IO) {
             try {
+                // Получаем user-id пользователя
+                val userId = getUserIdFromSharedPreferences()
+                Log.d(TAG, "Checking favorite status for user: $userId")
+                
                 val url = getServerUrl() + "/files/$fileId/favorite"
                 Log.d(TAG, "Sending GET request to: $url")
                 
                 val request = Request.Builder()
                     .url(url)
+                    .addHeader("user-id", userId) // Добавляем заголовок user-id
                     .get()
                     .build()
 
@@ -729,11 +734,16 @@ class PdfReaderActivity : AppCompatActivity() {
                 // Получаем информацию о файле перед добавлением в избранное
                 getFileInfo(fileId)
                 
+                // Получаем user-id пользователя
+                val userId = getUserIdFromSharedPreferences()
+                Log.d(TAG, "Adding to favorites for user: $userId")
+                
                 val url = getServerUrl() + "/files/$fileId/favorite"
                 Log.d(TAG, "Sending PUT request to: $url")
                 
                 val request = Request.Builder()
                     .url(url)
+                    .addHeader("user-id", userId) // Добавляем заголовок user-id
                     .put(create(null, ByteArray(0)))
                     .build()
 
@@ -779,21 +789,16 @@ class PdfReaderActivity : AppCompatActivity() {
                             }
                         }
                     }
-                } catch (e: java.net.ConnectException) {
-                    Log.e(TAG, "Server connection error", e)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error adding to favorites", e)
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@PdfReaderActivity, "Сервер недоступен, попробуйте зайти в другое время", Toast.LENGTH_LONG).show()
-                    }
-                } catch (e: java.net.SocketTimeoutException) {
-                    Log.e(TAG, "Server timeout error", e)
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@PdfReaderActivity, "Сервер не отвечает, попробуйте зайти в другое время", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@PdfReaderActivity, "Ошибка сети при добавлении в избранное", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error adding to favorites", e)
+                Log.e(TAG, "Error in addToFavorites", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@PdfReaderActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@PdfReaderActivity, "Произошла ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -820,10 +825,14 @@ class PdfReaderActivity : AppCompatActivity() {
                             if (fileInfo.has("directoryId")) {
                                 val directoryId = fileInfo.getString("directoryId")
                                 Log.d(TAG, "File directoryId: $directoryId")
+                            } else {
+
                             }
                         } catch (e: Exception) {
                             Log.e(TAG, "Error parsing file info", e)
                         }
+                    } else {
+
                     }
                 } else {
                     Log.e(TAG, "Failed to get file info: ${response.code}")
@@ -868,11 +877,16 @@ class PdfReaderActivity : AppCompatActivity() {
         Log.d(TAG, "Attempting to remove file from favorites with ID: $fileId")
         lifecycleScope.launch(Dispatchers.IO) {
             try {
+                // Получаем user-id пользователя
+                val userId = getUserIdFromSharedPreferences()
+                Log.d(TAG, "Removing from favorites for user: $userId")
+                
                 val url = getServerUrl() + "/files/$fileId/favorite"
                 Log.d(TAG, "Sending DELETE request to: $url")
                 
                 val request = Request.Builder()
                     .url(url)
+                    .addHeader("user-id", userId) // Добавляем заголовок user-id
                     .delete()
                     .build()
 
@@ -896,21 +910,16 @@ class PdfReaderActivity : AppCompatActivity() {
                             }
                         }
                     }
-                } catch (e: java.net.ConnectException) {
-                    Log.e(TAG, "Server connection error", e)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error removing from favorites", e)
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@PdfReaderActivity, "Сервер недоступен, попробуйте зайти в другое время", Toast.LENGTH_LONG).show()
-                    }
-                } catch (e: java.net.SocketTimeoutException) {
-                    Log.e(TAG, "Server timeout error", e)
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@PdfReaderActivity, "Сервер не отвечает, попробуйте зайти в другое время", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@PdfReaderActivity, "Ошибка сети при удалении из избранного", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error removing from favorites", e)
+                Log.e(TAG, "Error in removeFromFavorites", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@PdfReaderActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@PdfReaderActivity, "Произошла ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -1257,14 +1266,146 @@ class PdfReaderActivity : AppCompatActivity() {
         }
     }
 
+    // Получение идентификатора пользователя из SharedPreferences
+    private fun getUserIdFromSharedPreferences(): String {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("email", "anonymous") ?: "anonymous"
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        client.dispatcher.executorService.shutdown()
-        client.connectionPool.evictAll()
+        
+        // Переносим сетевые операции в фоновый поток
+        Thread {
+            try {
+                client.dispatcher.executorService.shutdown()
+                client.connectionPool.evictAll()
+            } catch (e: Exception) {
+                Log.e("PdfReaderActivity", "Error closing network connections: ${e.message}")
+            }
+        }.start()
     }
 }
 
 
 
+// Фрагмент из file-server/server.js
+// Маршруты для авторизации
+// file-server/package.json (фрагмент)
+//{
+//    "name": "provita-server",
+//    "version": "1.0.0",
+//    "dependencies": {
+//    "express": "^4.17.3",           // Веб-фреймворк
+//    "multer": "^1.4.4",             // Обработка файлов
+//    "jsonwebtoken": "^8.5.1",       // JWT-токены для аутентификации
+//    "bcrypt": "^5.0.1",             // Хеширование паролей
+//    "pg": "^8.7.3",                 // Драйвер PostgreSQL
+//    "pdf-lib": "^1.17.1",           // Работа с PDF
+//    "nodemailer": "^6.7.3",         // Отправка email
+//    "winston": "^3.7.2",            // Логирование
+//    "cors": "^2.8.5",               // CORS-политики
+//    "helmet": "^5.0.2",             // Защита HTTP-заголовков
+//    "uuid": "^8.3.2"                // Генерация уникальных идентификаторов
+//}
+//}
 
+//// file-server/admin/admin-controller.js
+//// Получение списка запросов на регистрацию
+//exports.getRegistrationRequests = async (req, res) => {
+//    try {
+//        const { status, page = 1, limit = 20 } = req.query;
+//        const offset = (page - 1) * limit;
+//
+//        // Формирование фильтра запросов по статусу
+//        const filter = status ? { status: status.toUpperCase() } : {};
+//
+//        // Получение запросов из базы данных
+//        const requests = await db.getRegistrationRequests(filter, limit, offset);
+//        const total = await db.countRegistrationRequests(filter);
+//
+//        return res.status(200).json({
+//            requests,
+//            pagination: {
+//            total,
+//            page: parseInt(page),
+//            limit: parseInt(limit),
+//            pages: Math.ceil(total / limit)
+//        }
+//        });
+//    } catch (error) {
+//        console.error('Ошибка при получении запросов на регистрацию:', error);
+//        return res.status(500).json({ error: 'Ошибка сервера при получении запросов' });
+//    }
+//};
+//
+//// Подтверждение запроса на регистрацию
+//exports.approveRegistration = async (req, res) => {
+//    try {
+//        const { requestId } = req.params;
+//
+//        // Получение данных заявки
+//        const request = await db.getRegistrationRequestById(requestId);
+//        if (!request) {
+//            return res.status(404).json({ error: 'Заявка не найдена' });
+//        }
+//
+//        if (request.status !== 'PENDING') {
+//            return res.status(400).json({ error: 'Заявка уже обработана' });
+//        }
+//
+//        // Генерация учетных данных
+//        const username = generateUsername(request.firstName, request.lastName);
+//        const password = generateSecurePassword();
+//        const hashedPassword = await bcrypt.hash(password, 10);
+//
+//        // Транзакционная обработка для обеспечения согласованности данных
+//        await db.runTransaction(async (client) => {
+//            // Создание учетной записи пользователя
+//            const userId = await db.createUser({
+//                username,
+//                email: request.email,
+//                password: hashedPassword,
+//                firstName: request.firstName,
+//                lastName: request.lastName,
+//                organization: request.organization,
+//                role: 'USER',
+//                status: 'ACTIVE',
+//                createdAt: new Date()
+//            }, client);
+//
+//            // Обновление статуса заявки
+//            await db.updateRegistrationRequest(requestId, {
+//            status: 'APPROVED',
+//            processedBy: req.admin.id,
+//            processedAt: new Date(),
+//            userId
+//        }, client);
+//
+//            // Логирование действия администратора
+//            await db.logAdminAction({
+//                adminId: req.admin.id,
+//                action: 'APPROVE_REGISTRATION',
+//                details: { requestId, userId },
+//                timestamp: new Date()
+//            }, client);
+//        });
+//
+//        // Отправка учетных данных пользователю по email
+//        await emailService.sendRegistrationApproval(
+//                request.email,
+//        request.firstName,
+//        username,
+//        password
+//        );
+//
+//        return res.status(200).json({
+//                message: 'Регистрация подтверждена, учетные данные отправлены пользователю',
+//                requestId
+//        });
+//    } catch (error) {
+//        console.error('Ошибка при подтверждении регистрации:', error);
+//        return res.status(500).json({ error: 'Ошибка сервера при подтверждении регистрации' });
+//    }
+//};
 

@@ -1,14 +1,13 @@
 {
   "project_info": {
-    "project_number": "211832820397",
-    "firebase_url": "https://provita-dddd9-default-rtdb.europe-west1.firebasedatabase.app",
-    "project_id": "provita-dddd9",
-    "storage_bucket": "provita-dddd9.firebasestorage.app"
+    "project_number": "669742674984",
+    "project_id": "provitaproject-f0a83",
+    "storage_bucket": "provitaproject-f0a83.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:211832820397:android:76153d88726d9e11aeec24",
+        "mobilesdk_app_id": "1:669742674984:android:6c427945f834c77070f11d",
         "android_client_info": {
           "package_name": "com.practicum.playlist_maker"
         }
@@ -16,26 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyC06BIGr6mdMIgi1x5JB8fLOsK9u0IPaLM"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:211832820397:android:36124ac45287b5c2aeec24",
-        "android_client_info": {
-          "package_name": "com.vimal.margh"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyC06BIGr6mdMIgi1x5JB8fLOsK9u0IPaLM"
+          "current_key": "AIzaSyDLBhTNh4G7IjM-FFB-4XiEEqRwCt15eWo"
         }
       ],
       "services": {

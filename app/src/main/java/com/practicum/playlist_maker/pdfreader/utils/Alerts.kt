@@ -3,6 +3,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.view.View
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.practicum.playlist_maker.R
 import com.google.android.material.snackbar.Snackbar
@@ -12,9 +13,9 @@ object Alerts {
         Success, Warning, Failure,
     }
 
-    private const val ALERT_SUCCESS_COLOR = "#5CB85C"
-    private const val ALERT_WARNING_COLOR = "#F2A91C"
-    private const val ALERT_FAILURE_COLOR = "#FF6C6C"
+    private val ALERT_SUCCESS_COLOR = R.color.blue_light
+    private val ALERT_WARNING_COLOR = R.color.red_light
+    private val ALERT_FAILURE_COLOR = R.color.red
 
     private fun showSnackBar(
         view: View,
@@ -28,24 +29,21 @@ object Alerts {
             val snackBarView = snackBar.view
             val snackBarTextView = snackBarView.findViewById<TextView>(com.google.android.material.R.id.snackbar_text)
             snackBarTextView?.typeface = ResourcesCompat.getFont(context, R.font.ys_display_bold)
-            snackBarTextView?.setTextColor(Color.WHITE)
+            snackBarTextView?.setTextColor(ContextCompat.getColor(context, R.color.text_color))
             snackBarTextView?.textSize = 14f
             snackBarView.setBackgroundResource(R.drawable.custom_snackbar_background)
             when (alertType) {
                 AlertType.Success ->
                     snackBarView.backgroundTintList =
-                        ColorStateList.valueOf(Color.parseColor(ALERT_SUCCESS_COLOR))
+                        ColorStateList.valueOf(ContextCompat.getColor(context, ALERT_SUCCESS_COLOR))
 
                 AlertType.Warning ->
                     snackBarView.backgroundTintList =
-                        ColorStateList.valueOf(Color.parseColor(ALERT_WARNING_COLOR))
+                        ColorStateList.valueOf(ContextCompat.getColor(context, ALERT_WARNING_COLOR))
 
                 AlertType.Failure ->
-                    snackBarView.backgroundTintList = ColorStateList.valueOf(
-                        Color.parseColor(
-                            ALERT_FAILURE_COLOR,
-                        ),
-                    )
+                    snackBarView.backgroundTintList = 
+                        ColorStateList.valueOf(ContextCompat.getColor(context, ALERT_FAILURE_COLOR))
             }
             snackBar.show()
         } catch (_: Exception) {}

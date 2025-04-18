@@ -19,27 +19,18 @@ object AppContextProvider {
 
 object RetrofitClient {
 
-    // Используем IP-адрес сервера в зависимости от устройства
-    // 10.0.2.2 для эмулятора (указывает на localhost компьютера)
-    // 192.168.0.105 для реальных устройств в той же сети
-    private const val EMULATOR_BASE_URL = "http://10.0.2.2:3000/"
-    private const val REAL_DEVICE_BASE_URL = "http://192.168.0.105:3000/"
+    // Используем локальный URL для отладки
+    private const val LOCAL_URL = "http://192.168.0.86:3000"
     private const val TAG = "RetrofitClient"
     
-    // Функция для определения базового URL в зависимости от типа устройства
+    // Функция для определения базового URL
     fun getBaseUrl(context: Context): String {
-        // Проверяем, запущено ли приложение на эмуляторе
-        val isEmulator = android.os.Build.MODEL.contains("sdk") ||
-                android.os.Build.MODEL.contains("Emulator") ||
-                android.os.Build.MODEL.contains("Android SDK")
+        Log.d(TAG, "Using Local URL: $LOCAL_URL")
         
-        return if (isEmulator) {
-            Log.d(TAG, "Using emulator base URL: $EMULATOR_BASE_URL")
-            EMULATOR_BASE_URL
-        } else {
-            Log.d(TAG, "Using real device base URL: $REAL_DEVICE_BASE_URL")
-            REAL_DEVICE_BASE_URL
-        }
+        // Сохраняем локальный URL для будущего использования
+        val prefs = context.getSharedPreferences("PROVITA_SETTINGS", Context.MODE_PRIVATE) 
+        prefs.edit().putString("SERVER_URL", LOCAL_URL).apply()
+        return LOCAL_URL
     }
 
     // OkHttp клиент с перехватчиком для добавления заголовка user-id
@@ -47,10 +38,13 @@ object RetrofitClient {
         .addInterceptor(UserIdInterceptor())
         .build()
 
-    // Создаем Retrofit сервис с динамическим определением базового URL
+    // Создаем Retrofit сервис с локальным URL
     fun <T> createService(serviceClass: Class<T>, context: Context): T {
+        val baseUrl = getBaseUrl(context)
+        Log.d(TAG, "Creating Retrofit service for ${serviceClass.simpleName} with base URL: $baseUrl")
+        
         val retrofit = Retrofit.Builder()
-            .baseUrl(getBaseUrl(context))
+            .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -60,9 +54,11 @@ object RetrofitClient {
 
     // Для обратной совместимости
     fun <T> createService(serviceClass: Class<T>): T {
-        // Используем эмуляторный URL по умолчанию, если контекст не предоставлен
+        // Используем локальный URL
+        Log.d(TAG, "Creating Retrofit service without context, using Local URL: $LOCAL_URL")
+        
         val retrofit = Retrofit.Builder()
-            .baseUrl(EMULATOR_BASE_URL)
+            .baseUrl(LOCAL_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -113,9 +109,10 @@ object RetrofitClient {
     // Функция для создания сервиса с аутентификацией
     fun <T> createAuthenticatedService(serviceClass: Class<T>, context: Context): T {
         val client = createOkHttpClient(context)
+        Log.d(TAG, "Creating authenticated service for ${serviceClass.simpleName} with Local URL: $LOCAL_URL")
         
         val retrofit = Retrofit.Builder()
-            .baseUrl(getBaseUrl(context))
+            .baseUrl(LOCAL_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -133,15 +130,18 @@ class UserIdInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
         val userId = getUserIdFromSharedPreferences()
         val userName = getUserNameFromSharedPreferences()
-        Log.d(TAG, "Adding user-id header: $userId, user-name: $userName")
+        val encodedUserName = android.util.Base64.encodeToString(userName.toByteArray(), android.util.Base64.NO_WRAP)
+        Log.d(TAG, "Adding user-id header: $userId, user-name: $userName (encoded: $encodedUserName)")
         
         val request = chain.request().newBuilder()
             .addHeader("user-id", userId)
             // Добавляем имя пользователя в разных форматах заголовков для совместимости с сервером
-            .addHeader("username", userName)     // Вариант 1
-            .addHeader("user-name", userName)    // Вариант 2
-            .addHeader("User-Name", userName)    // Вариант 3 (с заглавными буквами)
-            .addHeader("userName", userName)     // Вариант 4 (camelCase)
+            .addHeader("username", encodedUserName)     // Вариант 1
+            .addHeader("user-name", encodedUserName)    // Вариант 2
+            .addHeader("User-Name", encodedUserName)    // Вариант 3 (с заглавными буквами)
+            .addHeader("userName", encodedUserName)     // Вариант 4 (camelCase)
+            // Добавляем расшифровку в заголовке
+            .addHeader("user-name-encoding", "base64")  // Указываем тип кодирования
             .build()
         
         // Логируем все заголовки для отладки

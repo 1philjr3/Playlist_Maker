@@ -45,6 +45,11 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.material.textfield.TextInputEditText
+import com.practicum.playlist_maker.mediaLibrary.data.NotificationService
+import com.practicum.playlist_maker.mediaLibrary.ui.dialog.PdfUploadDialog
+import com.practicum.playlist_maker.network.ServerUrlUpdater
+import android.util.Log
 
 class DirectoryContentFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
@@ -277,11 +282,113 @@ class DirectoryContentFragment : Fragment() {
                         return
                     }
 
-                    uploadPdfFile(uri, name, size)
+                    // Вместо прямой загрузки показываем диалог с опцией уведомления
+                    showPdfUploadDialog(uri, name, size)
                 }
             }
         } catch (e: Exception) {
             Snackbar.make(requireView(), "Ошибка при обработке файла", Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun showPdfUploadDialog(uri: Uri, fileName: String, fileSize: Long) {
+        val dialogFragment = PdfUploadDialog.newInstance(
+            uri = uri,
+            fileName = fileName,
+            fileSize = fileSize,
+            listener = object : PdfUploadDialog.PdfUploadListener {
+                override fun onUploadWithNotification(uri: Uri, fileName: String, fileSize: Long, description: String) {
+                    uploadPdfFileWithNotification(uri, fileName, fileSize, description)
+                }
+
+                override fun onUploadWithoutNotification(uri: Uri, fileName: String, fileSize: Long) {
+                    uploadPdfFile(uri, fileName, fileSize)
+                }
+            }
+        )
+        dialogFragment.show(childFragmentManager, "pdfUploadDialog")
+    }
+
+    private fun uploadPdfFileWithNotification(uri: Uri, fileName: String, fileSize: Long, description: String) {
+        try {
+            val tempFile = File(requireContext().cacheDir, "temp_pdf")
+            requireContext().contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart(
+                    "pdf",
+                    fileName,
+                    tempFile.asRequestBody("application/pdf".toMediaType())
+                )
+                .addFormDataPart("name", fileName)
+                .addFormDataPart("size", fileSize.toString())
+                .addFormDataPart("directoryId", currentDirectory?.id ?: "root")
+                .addFormDataPart("userId", getUserIdFromPrefs())
+                .addFormDataPart("userName", getUserNameFromPrefs())
+                .addFormDataPart("sendNotification", "true")
+                .addFormDataPart("notificationDescription", description)
+                .build()
+
+            val request = Request.Builder()
+                .url("${getServerUrl()}/directories/${currentDirectory?.id ?: "root"}/files")
+                .post(requestBody)
+                .build()
+
+            client.newCall(request).enqueue(object : Callback {
+                @Throws(IOException::class)
+                override fun onFailure(call: Call, e: IOException) {
+                    activity?.runOnUiThread {
+                        Snackbar.make(requireView(), "Ошибка при загрузке файла: ${e.message}", Snackbar.LENGTH_LONG).show()
+                        e.printStackTrace()
+                    }
+                }
+
+                @Throws(IOException::class)
+                override fun onResponse(call: Call, response: Response) {
+                    tempFile.delete()
+                    
+                    if (response.isSuccessful) {
+                        // Получаем ID загруженного файла для отправки уведомления
+                        val responseJson = JSONObject(response.body?.string() ?: "{}")
+                        val fileId = responseJson.optString("id", "")
+                        
+                        // Если файл успешно загружен и получен ID, отправляем уведомление
+                        if (fileId.isNotEmpty()) {
+                            val notificationService = NotificationService()
+                            notificationService.sendFileNotification(
+                                fileId = fileId,
+                                fileName = fileName,
+                                description = description,
+                                userId = getUserIdFromPrefs(),
+                                userName = getUserNameFromPrefs()
+                            )
+                            
+                            activity?.runOnUiThread {
+                                loadDirectoryContent()
+                                Snackbar.make(requireView(), "Файл успешно загружен и уведомление отправлено", Snackbar.LENGTH_LONG).show()
+                            }
+                        } else {
+                            activity?.runOnUiThread {
+                                loadDirectoryContent()
+                                Snackbar.make(requireView(), "Файл загружен, но не удалось получить ID для отправки уведомления", Snackbar.LENGTH_LONG).show()
+                            }
+                        }
+                    } else {
+                        val errorBody = response.body?.string()
+                        activity?.runOnUiThread {
+                            Snackbar.make(requireView(), "Ошибка при загрузке файла: ${response.code} - $errorBody", Snackbar.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            })
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Snackbar.make(requireView(), "Ошибка при обработке файла: ${e.message}", Snackbar.LENGTH_LONG).show()
         }
     }
 
@@ -480,7 +587,8 @@ class DirectoryContentFragment : Fragment() {
         recyclerView.visibility = View.GONE
         tvEmptyDirectory.visibility = View.GONE
         tvServerError.visibility = View.VISIBLE
-        fabAddDirectory.visibility = View.GONE
+        // Убираем скрытие кнопки, чтобы всегда можно было создать директорию
+        // fabAddDirectory.visibility = View.GONE
     }
 
     private fun showDeleteSelectedItemsDialog() {
@@ -495,14 +603,14 @@ class DirectoryContentFragment : Fragment() {
             else -> "Удалить выбранные элементы (${selectedItems.size})?"
         }
 
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.DeleteDialogStyle)
             .setTitle("Удаление")
             .setMessage(message)
-            .setPositiveButton("Удалить") { dialog, _ ->
+            .setPositiveButton("УДАЛИТЬ") { dialog, _ ->
                 deleteSelectedItems(selectedItems)
                 dialog.dismiss()
             }
-            .setNegativeButton("Отмена") { dialog, _ ->
+            .setNegativeButton("ОТМЕНА") { dialog, _ ->
                 dialog.dismiss()
             }
             .show()
@@ -596,7 +704,8 @@ class DirectoryContentFragment : Fragment() {
             pickImage.launch("image/*")
         }
 
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.AddDirectoryDialogStyle)
+            .setTitle("Создание директории")
             .setView(dialogView)
             .setPositiveButton("ДОБАВИТЬ") { dialog, _ ->
                 val name = nameInput?.text.toString()
@@ -623,7 +732,7 @@ class DirectoryContentFragment : Fragment() {
         if (selectedImageUri != null) {
             uploadImageAndCreateDirectory(name, description, selectedImageUri)
         } else {
-            createDirectoryWithImage(name, description, "${getServerUrl()}/uploads/images/default.jpg")
+            createDirectoryWithImage(name, description, "${getServerUrl()}/uploads/avatars/1744893780749-avatar_48bfcbfe_78dc_4cdc_9bc9_9b09160bb61f.jpg")
         }
     }
 
@@ -863,7 +972,7 @@ class DirectoryContentFragment : Fragment() {
         nameInput.setText(currentName)
         nameInput.setSelection(currentName.length) // Курсор в конец текста
         
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.RenameDialogStyle)
             .setTitle(if (isDirectory) "Переименовать директорию" else "Переименовать файл")
             .setView(dialogView)
             .setPositiveButton("СОХРАНИТЬ") { dialog, _ ->
@@ -1047,7 +1156,7 @@ class DirectoryContentFragment : Fragment() {
     private fun showDeleteConfirmationDialog(isDirectory: Boolean, id: String) {
         val message = if (isDirectory) "Удалить эту директорию?" else "Удалить этот файл?"
         
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.DeleteDialogStyle)
             .setTitle("Удаление")
             .setMessage(message)
             .setPositiveButton("УДАЛИТЬ") { dialog, _ ->
@@ -1257,19 +1366,33 @@ class DirectoryContentFragment : Fragment() {
 
     // Функция для получения URL сервера в зависимости от типа устройства
     private fun getServerUrl(): String {
-        // Проверяем, запущено ли приложение на эмуляторе
-        val isEmulator = android.os.Build.MODEL.contains("sdk") ||
-                android.os.Build.MODEL.contains("Emulator") ||
-                android.os.Build.MODEL.contains("Android SDK")
-        
-        return if (isEmulator) {
-            "http://10.0.2.2:3000"
-        } else {
-            "http://192.168.0.105:3000"
+        try {
+            // Проверяем, прикреплен ли фрагмент к контексту
+            if (!isAdded) {
+                Log.w(TAG, "Фрагмент не прикреплен к контексту, возвращаем URL по умолчанию")
+                return "http://192.168.0.86:3000"
+            }
+            
+            // Проверяем, есть ли сохраненный URL
+            val prefs = requireContext().getSharedPreferences("PROVITA_SETTINGS", Context.MODE_PRIVATE)
+            val savedUrl = prefs.getString("SERVER_URL", null)
+            
+            // Если есть, используем его
+            if (savedUrl != null) {
+                return savedUrl
+            }
+            
+            // Иначе используем URL из ServerUrlUpdater
+            return ServerUrlUpdater.getDuckDnsUrl()
+        } catch (e: Exception) {
+            Log.e(TAG, "Ошибка при получении URL сервера", e)
+            return "http://192.168.0.86:3000"
         }
     }
 
     companion object {
+        private const val TAG = "DirectoryContentFragment"
+        
         fun newInstance(): DirectoryContentFragment {
             return DirectoryContentFragment()
         }

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление APK файлами - Админ панель</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
+        }
+        header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #4285f4;
+            margin-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .upload-area {
+            border: 2px dashed #4285f4;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+        .upload-area.dragover {
+            background-color: #e8f0fe;
+        }
+        .upload-info {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+        .hidden {
+            display: none;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4285f4;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #3367d6;
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+            height: 20px;
+        }
+        .progress {
+            width: 0;
+            height: 100%;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            transition: width 0.3s;
+        }
+        .current-file {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .current-file h3 {
+            margin-top: 0;
+            color: #4285f4;
+        }
+        .current-file p {
+            margin: 5px 0;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .download-link {
+            margin-top: 10px;
+            display: block;
+            color: #4285f4;
+            text-decoration: none;
+        }
+        .download-link:hover {
+            text-decoration: underline;
+        }
+        #qrCodeContainer {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Управление APK файлами</h1>
+            <p>Загрузите новую версию приложения</p>
+        </header>
+
+        <div id="authPanel">
+            <div class="form-group">
+                <label for="adminKey">Ключ администратора:</label>
+                <input type="password" id="adminKey" placeholder="Введите ключ администратора">
+            </div>
+            <button class="btn" id="loginBtn">Войти</button>
+        </div>
+
+        <div id="uploadPanel" class="hidden">
+            <div id="alertBox" class="hidden"></div>
+
+            <div class="current-file" id="currentFileInfo">
+                <h3>Текущая версия приложения</h3>
+                <p>Загрузка информации...</p>
+            </div>
+
+            <div class="form-group">
+                <label for="versionInput">Версия приложения:</label>
+                <input type="text" id="versionInput" placeholder="Например: 1.0.0">
+            </div>
+
+            <div class="upload-area" id="dropArea">
+                <h3>Перетащите APK файл сюда</h3>
+                <p>или</p>
+                <button class="btn" id="selectFileBtn">Выбрать файл</button>
+                <input type="file" accept=".apk" id="fileInput" style="display:none;">
+                <div class="upload-info" id="fileInfo">Файл не выбран</div>
+            </div>
+
+            <div class="progress-bar hidden" id="progressBarContainer">
+                <div class="progress" id="progressBar">0%</div>
+            </div>
+
+            <button class="btn" id="uploadBtn" disabled>Загрузить APK</button>
+
+            <div id="downloadInfo" class="hidden">
+                <h3>Ссылка для скачивания:</h3>
+                <p id="downloadUrl"></p>
+                <div id="qrCodeContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const authPanel = document.getElementById('authPanel');
+            const uploadPanel = document.getElementById('uploadPanel');
+            const loginBtn = document.getElementById('loginBtn');
+            const adminKeyInput = document.getElementById('adminKey');
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+            const selectFileBtn = document.getElementById('selectFileBtn');
+            const fileInfo = document.getElementById('fileInfo');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressBarContainer = document.getElementById('progressBarContainer');
+            const progressBar = document.getElementById('progressBar');
+            const currentFileInfo = document.getElementById('currentFileInfo');
+            const versionInput = document.getElementById('versionInput');
+            const alertBox = document.getElementById('alertBox');
+            const downloadInfo = document.getElementById('downloadInfo');
+            const downloadUrl = document.getElementById('downloadUrl');
+            const qrCodeContainer = document.getElementById('qrCodeContainer');
+
+            let selectedFile = null;
+            let adminKey = localStorage.getItem('adminKey') || '';
+
+            // Если ключ администратора уже сохранен, автоматически авторизуемся
+            if (adminKey) {
+                adminKeyInput.value = adminKey;
+                checkAuth();
+            }
+
+            // Событие входа
+            loginBtn.addEventListener('click', checkAuth);
+
+            function checkAuth() {
+                adminKey = adminKeyInput.value.trim();
+                if (adminKey) {
+                    localStorage.setItem('adminKey', adminKey);
+                    authPanel.classList.add('hidden');
+                    uploadPanel.classList.remove('hidden');
+                    loadCurrentAppInfo();
+                } else {
+                    showAlert('Введите ключ администратора', 'danger');
+                }
+            }
+
+            // Загрузка информации о текущей версии приложения
+            function loadCurrentAppInfo() {
+                fetch('/api/app/info')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.file_name) {
+                            currentFileInfo.innerHTML = `
+                                <h3>Текущая версия приложения</h3>
+                                <p><strong>Версия:</strong> ${data.version || 'Неизвестно'}</p>
+                                <p><strong>Размер:</strong> ${data.size || 'Неизвестно'}</p>
+                                <p><strong>Обновлено:</strong> ${formatDate(data.updated_at)}</p>
+                                <p><strong>Скачиваний:</strong> ${data.downloads || 0}</p>
+                                <a href="${data.download_url}" class="download-link" target="_blank">Скачать текущую версию</a>
+                            `;
+                            versionInput.value = getNextVersion(data.version);
+                            
+                            // Показываем информацию о скачивании
+                            downloadInfo.classList.remove('hidden');
+                            downloadUrl.textContent = `${window.location.origin}/download`;
+                            
+                            // Генерируем QR-код
+                            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/download`)}`;
+                            qrCodeContainer.innerHTML = `<img src="${qrUrl}" alt="QR код для скачивания">`;
+                        } else {
+                            currentFileInfo.innerHTML = `
+                                <h3>Приложение еще не загружено</h3>
+                                <p>Загрузите APK файл для начала распространения.</p>
+                            `;
+                            versionInput.value = '1.0.0';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при загрузке информации о приложении:', error);
+                        currentFileInfo.innerHTML = `
+                            <h3>Ошибка при загрузке информации</h3>
+                            <p>Не удалось получить данные о текущей версии приложения.</p>
+                        `;
+                    });
+            }
+            
+            // Получение следующей версии на основе текущей
+            function getNextVersion(currentVersion) {
+                if (!currentVersion) return '1.0.0';
+                
+                const parts = currentVersion.split('.');
+                if (parts.length !== 3) return '1.0.0';
+                
+                // Увеличиваем последнюю цифру версии
+                let patch = parseInt(parts[2]) + 1;
+                return `${parts[0]}.${parts[1]}.${patch}`;
+            }
+
+            // Форматирование даты
+            function formatDate(dateString) {
+                if (!dateString) return 'Неизвестно';
+                
+                try {
+                    const date = new Date(dateString);
+                    return date.toLocaleString('ru-RU', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } catch (e) {
+                    return dateString;
+                }
+            }
+
+            // Обработка выбора файла через кнопку
+            selectFileBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', () => {
+                handleFiles(fileInput.files);
+            });
+
+            // Обработка Drag&Drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropArea.classList.add('dragover');
+            }
+
+            function unhighlight() {
+                dropArea.classList.remove('dragover');
+            }
+
+            dropArea.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+
+            // Обработка выбранных файлов
+            function handleFiles(files) {
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.name.endsWith('.apk')) {
+                        selectedFile = file;
+                        fileInfo.textContent = `Выбран файл: ${file.name} (${formatFileSize(file.size)})`;
+                        uploadBtn.disabled = false;
+                    } else {
+                        showAlert('Выберите файл с расширением .apk', 'danger');
+                        selectedFile = null;
+                        fileInfo.textContent = 'Файл не выбран';
+                        uploadBtn.disabled = true;
+                    }
+                }
+            }
+
+            // Форматирование размера файла
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            // Обработка нажатия на кнопку загрузки
+            uploadBtn.addEventListener('click', uploadFile);
+
+            function uploadFile() {
+                if (!selectedFile) {
+                    showAlert('Выберите файл для загрузки', 'danger');
+                    return;
+                }
+
+                const version = versionInput.value.trim();
+                if (!version) {
+                    showAlert('Укажите версию приложения', 'danger');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('apk', selectedFile);
+                formData.append('version', version);
+
+                uploadBtn.disabled = true;
+                progressBarContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/app/upload', true);
+                
+                // Проверяем наличие ключа администратора и добавляем его в заголовок
+                if (adminKey) {
+                    xhr.setRequestHeader('Admin-Key', adminKey);
+                    console.log('Добавлен заголовок Admin-Key');
+                } else {
+                    console.error('Ошибка: отсутствует ключ администратора');
+                    showAlert('Отсутствует ключ администратора. Перезагрузите страницу и войдите снова.', 'danger');
+                    uploadBtn.disabled = false;
+                    progressBarContainer.classList.add('hidden');
+                    return;
+                }
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = Math.round((e.loaded / e.total) * 100);
+                        progressBar.style.width = percentComplete + '%';
+                        progressBar.textContent = percentComplete + '%';
+                    }
+                };
+
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        showAlert('APK успешно загружен!', 'success');
+                        selectedFile = null;
+                        fileInfo.textContent = 'Файл не выбран';
+                        loadCurrentAppInfo();
+                    } else {
+                        let errorMessage = 'Произошла ошибка при загрузке файла';
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            errorMessage = response.error || errorMessage;
+                        } catch (e) {}
+                        showAlert(errorMessage, 'danger');
+                    }
+                    uploadBtn.disabled = false;
+                    setTimeout(() => {
+                        progressBarContainer.classList.add('hidden');
+                    }, 2000);
+                };
+
+                xhr.onerror = function() {
+                    showAlert('Произошла ошибка сети при загрузке файла', 'danger');
+                    uploadBtn.disabled = false;
+                    progressBarContainer.classList.add('hidden');
+                };
+
+                xhr.send(formData);
+            }
+
+            // Показ уведомлений
+            function showAlert(message, type) {
+                alertBox.textContent = message;
+                alertBox.className = 'alert alert-' + type;
+                alertBox.classList.remove('hidden');
+                setTimeout(() => {
+                    alertBox.classList.add('hidden');
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html> 

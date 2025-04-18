@@ -1,23 +1,30 @@
 [
   {
-    "id": "1742743369649",
-    "name": "аллоппоалплплп",
-    "description": "апривет",
-    "imageUrl": "/uploads/images/1742743369604-1000000042.jpg",
-    "parentId": null
-  },
-  {
-    "id": "1742793082394",
-    "name": "wed",
+    "id": "1744878971064",
+    "name": "Компрессор ",
     "description": "",
-    "imageUrl": "/uploads/images/1742793082366-1000000042.jpg",
+    "imageUrl": "uploads/images/1744878970644-1000006656.png",
     "parentId": null
   },
   {
-    "id": "1742990232695",
-    "name": "frfrf",
-    "description": "rfrfrfrfrfrfrf",
-    "imageUrl": "/uploads/images/1742990232674-1000000042.jpg",
-    "parentId": "1742793082394"
+    "id": "1744879053396",
+    "name": "Осушитель",
+    "description": "",
+    "imageUrl": "uploads/images/1744879053254-1000006657.jpg",
+    "parentId": null
+  },
+  {
+    "id": "1744879100455",
+    "name": "Инструкции/регламенты",
+    "description": "",
+    "imageUrl": "uploads/images/default.jpg",
+    "parentId": null
+  },
+  {
+    "id": "1744879300643",
+    "name": "Концентраторы",
+    "description": "Информация по работе с установками",
+    "imageUrl": "uploads/images/1744879300342-1000006658.webp",
+    "parentId": null
   }
 ]

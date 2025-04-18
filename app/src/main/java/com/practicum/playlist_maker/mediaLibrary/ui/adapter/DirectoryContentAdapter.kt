@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.CheckBox
+import android.widget.ImageButton
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -89,19 +90,34 @@ class DirectoryContentAdapter(
     }
 
     inner class DirectoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val ivDirectory: ImageView = itemView.findViewById(R.id.ivDirectory)
-        private val tvDirectoryName: TextView = itemView.findViewById(R.id.tvDirectoryName)
-        private val tvDirectoryDescription: TextView = itemView.findViewById(R.id.tvDirectoryDescription)
+        private val directoryIcon: ImageView = itemView.findViewById(R.id.directoryIcon)
+        private val directoryName: TextView = itemView.findViewById(R.id.directoryName)
+        private val directoryPath: TextView = itemView.findViewById(R.id.directoryPath)
+        private val btnNavigateDirectory: ImageButton = itemView.findViewById(R.id.btnNavigateDirectory)
 
         fun bind(directory: Directory) {
-            tvDirectoryName.text = directory.name
-            tvDirectoryDescription.text = directory.description
+            directoryName.text = directory.name
+            directoryPath.text = directory.description
 
-            Glide.with(itemView.context)
-                .load(directory.imageUrl)
-                .placeholder(R.drawable.ic_directory)
-                .error(R.drawable.ic_directory)
-                .into(ivDirectory)
+            // Загружаем изображение директории, если оно есть
+            if (!directory.imageUrl.isNullOrEmpty()) {
+                // Для пользовательских изображений не применяем никаких фильтров
+                directoryIcon.clearColorFilter()
+                directoryIcon.imageTintList = null
+                
+                Glide.with(itemView.context)
+                    .load(directory.imageUrl)
+                    .placeholder(R.drawable.ic_folder)
+                    .error(R.drawable.ic_folder)
+                    .centerCrop()
+                    .into(directoryIcon)
+            } else {
+                // Устанавливаем стандартную иконку папки
+                // Android автоматически выберет нужную иконку в зависимости от темы
+                directoryIcon.clearColorFilter()
+                directoryIcon.imageTintList = null
+                directoryIcon.setImageResource(R.drawable.ic_folder)
+            }
 
             val isSelected = selectedItems.contains(directory.id)
             itemView.setBackgroundResource(
@@ -109,6 +125,14 @@ class DirectoryContentAdapter(
                 else android.R.color.transparent
             )
 
+            // Кнопка навигации всегда открывает директорию
+            btnNavigateDirectory.setOnClickListener {
+                if (!selectionMode) {
+                    onDirectoryClick(directory)
+                }
+            }
+
+            // Нажатие на карточку выбирает элемент в режиме выбора, иначе тоже открывает директорию
             itemView.setOnClickListener {
                 if (selectionMode) {
                     toggleDirectorySelection(directory)
@@ -117,6 +141,7 @@ class DirectoryContentAdapter(
                 }
             }
 
+            // Долгое нажатие активирует режим выбора
             itemView.setOnLongClickListener {
                 if (!selectionMode) {
                     selectionMode = true

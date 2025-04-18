@@ -1,5 +1,6 @@
 package com.practicum.playlist_maker.mediaLibrary.ui.fragment
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,7 @@ import com.practicum.playlist_maker.R
 import com.practicum.playlist_maker.marchAuto.adapters.ActivityHistoryAdapter
 import com.practicum.playlist_maker.marchAuto.models.ActivityHistoryItem
 import com.practicum.playlist_maker.mediaLibrary.ActivityHistoryService
+import com.practicum.playlist_maker.network.ServerUrlUpdater
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -42,13 +44,23 @@ class HistoryFragment : Fragment() {
         adapter = ActivityHistoryAdapter()
         recyclerView.adapter = adapter
 
+        initRetrofit()
+        loadHistory()
+    }
+
+    private fun initRetrofit() {
+        // Получаем URL сервера из настроек
+        val serverUrl = context?.let {
+            it.getSharedPreferences("PROVITA_SETTINGS", Context.MODE_PRIVATE)
+                .getString("SERVER_URL", ServerUrlUpdater.getDuckDnsUrl())
+        } ?: ServerUrlUpdater.getDuckDnsUrl()
+        
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://172.17.3.10:3000/")
+            .baseUrl("$serverUrl/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
         historyService = retrofit.create(ActivityHistoryService::class.java)
-        loadHistory()
     }
 
     private fun loadHistory() {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Административная панель - Добавление пользователей</title>
+    <title>Панель администратора - Добавление пользователей</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,56 +13,95 @@
             background-color: #f5f5f5;
         }
         .container {
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto;
             background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         h1 {
             color: #333;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: bold;
+            color: #444;
         }
         input[type="text"],
         input[type="email"],
         input[type="password"] {
             width: 100%;
-            padding: 8px;
+            padding: 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
+            font-size: 16px;
+        }
+        input:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+        .btn-container {
+            text-align: center;
+            margin-top: 30px;
         }
         button {
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 15px 30px;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         button:hover {
             background-color: #45a049;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
-        .alert {
-            padding: 10px;
-            margin: 15px 0;
+        button:active {
+            transform: translateY(2px);
+        }
+        .important-note {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
             border-radius: 4px;
+            color: #856404;
         }
-        .alert-success {
+        .highlight {
+            background-color: #fffacd;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
             background-color: #d4edda;
+            border: 1px solid #c3e6cb;
             color: #155724;
         }
-        .alert-danger {
+        .error {
             background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
             color: #721c24;
         }
     </style>
@@ -71,92 +110,124 @@
     <div class="container">
         <h1>Добавление нового пользователя</h1>
         
-        <div id="response-message" style="display: none;"></div>
-        
-        <form id="add-user-form">
+        <!-- Форма с AJAX отправкой -->
+        <div id="addUserForm">
             <div class="form-group">
                 <label for="name">ФИО:</label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" id="name" name="name" placeholder="Введите полное имя сотрудника" required>
             </div>
             
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" placeholder="user@mail.ru" value="123uks123@mail.ru" required>
             </div>
             
             <div class="form-group">
                 <label for="department">Отдел:</label>
-                <input type="text" id="department" name="department" required>
+                <input type="text" id="department" name="department" placeholder="Например: ПНР" required>
             </div>
             
             <div class="form-group">
                 <label for="password">Пароль:</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" placeholder="Создайте надежный пароль" required>
             </div>
             
             <div class="form-group">
                 <label for="admin-key">Административный ключ:</label>
-                <input type="password" id="admin-key" name="admin-key" required>
+                <input type="password" id="admin-key" name="admin-key" value="1234" required>
+                <small style="color: #666; display: block; margin-top: 5px;">Ключ по умолчанию: 1234</small>
             </div>
             
-            <button type="submit">Добавить пользователя</button>
-        </form>
+            <div class="btn-container">
+                <button type="button" id="submitBtn">Добавить пользователя</button>
+            </div>
+        </div>
+        
+        <div id="statusMessage" class="status"></div>
+        
+        <div class="important-note">
+            <p><strong>Важно:</strong> В поле Email используйте только <span class="highlight">mail.ru</span> адреса для гарантированной доставки писем.</p>
+            <p>После добавления пользователя на указанный email будет отправлено письмо с данными для входа.</p>
+            <p>Если письмо не приходит, попробуйте использовать email <span class="highlight">123uks123@mail.ru</span> (предустановлен в форме).</p>
+        </div>
+        
+        <!-- Добавляем ссылку на страницу управления APK в соответствующее место в HTML -->
+        <div class="admin-section">
+            <h2>Управление приложением</h2>
+            <div class="admin-actions">
+                <a href="/admin-app" target="_blank" class="action-btn">Управление APK файлами</a>
+                <p>Загрузите и обновите APK файл приложения для распространения</p>
+            </div>
+        </div>
     </div>
     
     <script>
-        // Базовый URL сервера
-        const SERVER_URL = 'http://172.17.3.10:3000';
-
-        document.getElementById('add-user-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            // Собираем данные формы
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const department = document.getElementById('department').value;
             const password = document.getElementById('password').value;
             const adminKey = document.getElementById('admin-key').value;
             
-            fetch(`${SERVER_URL}/admin/add-user`, {
+            // Проверяем что все поля заполнены
+            if (!name || !email || !department || !password || !adminKey) {
+                showStatus('Пожалуйста, заполните все поля', 'error');
+                return;
+            }
+            
+            // Создаем объект с данными
+            const formData = {
+                name: name,
+                email: email,
+                department: department,
+                password: password,
+                'admin-key': adminKey
+            };
+            
+            // Отправляем запрос на сервер
+            fetch('/admin/add-user', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Admin-Key': adminKey
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    name,
-                    email,
-                    department,
-                    password
-                })
+                body: JSON.stringify(formData)
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                if (response.ok) {
+                    return response.json();
                 }
-                return response.json();
+                throw new Error('Ошибка при добавлении пользователя');
             })
             .then(data => {
-                const messageElement = document.getElementById('response-message');
-                messageElement.style.display = 'block';
-                
-                if (data.error) {
-                    messageElement.className = 'alert alert-danger';
-                    messageElement.textContent = data.error;
-                } else {
-                    messageElement.className = 'alert alert-success';
-                    messageElement.textContent = 'Пользователь успешно добавлен';
-                    
-                    // Очистить форму после успешного добавления
-                    document.getElementById('add-user-form').reset();
-                }
+                showStatus('Пользователь успешно добавлен! Данные для входа отправлены на указанный email.', 'success');
+                // Очищаем форму
+                document.getElementById('name').value = '';
+                document.getElementById('email').value = '123uks123@mail.ru';
+                document.getElementById('department').value = '';
+                document.getElementById('password').value = '';
             })
             .catch(error => {
-                const messageElement = document.getElementById('response-message');
-                messageElement.style.display = 'block';
-                messageElement.className = 'alert alert-danger';
-                messageElement.textContent = 'Произошла ошибка при отправке запроса: ' + error.message;
+                console.error('Ошибка:', error);
+                showStatus('Ошибка при добавлении пользователя. Пожалуйста, проверьте данные и попробуйте снова.', 'error');
             });
         });
+        
+        // Функция для отображения статуса
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            
+            // Удаляем предыдущие классы
+            statusDiv.classList.remove('success', 'error');
+            
+            // Добавляем нужный класс
+            statusDiv.classList.add(type);
+            
+            // Прокручиваем к сообщению
+            statusDiv.scrollIntoView({ behavior: 'smooth' });
+        }
     </script>
 </body>
 </html> 

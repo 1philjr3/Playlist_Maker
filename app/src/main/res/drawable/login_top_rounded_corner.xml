@@ -5,5 +5,5 @@
         android:bottomRightRadius="0.100000024dip"
         android:topLeftRadius="24.0dip"
         android:topRightRadius="24.0dip" />
-    <solid android:color="@color/white" />
+    <solid android:color="@color/card_background" />
 </shape>

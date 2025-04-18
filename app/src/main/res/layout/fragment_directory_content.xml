@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_color"
+    android:background="@color/reading_background"
     tools:context=".mediaLibrary.ui.activity.DirectoryContentFragment">
 
     <LinearLayout
         android:id="@+id/llPathContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/toolbar_background"
+        android:background="@color/reading_path_background"
         android:orientation="vertical"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -63,6 +63,9 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:src="@drawable/ic_add"
+        android:elevation="8dp"
+        app:tint="@color/white"
+        style="@style/FAB_color"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

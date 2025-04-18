@@ -9,8 +9,13 @@
         <item name="colorSecondary">@color/black</item>
         <item name="colorSecondaryVariant">@color/blue</item>
         <item name="colorOnSecondary">@color/white</item>
+        <!-- Цвет для элементов на фоне -->
+        <item name="colorOnBackground">@color/white</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Стиль для ActionMode -->
+        <item name="actionModeStyle">@style/ReadingActionModeStyle</item>
+        <item name="actionModeBackground">@color/reading_menu_background</item>
         <!-- Customize your theme here. -->
     </style>
 </resources>

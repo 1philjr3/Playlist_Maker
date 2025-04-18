@@ -1,6 +1,7 @@
 package com.practicum.playlist_maker.pdfreader.di
 
 import android.content.Context
+import com.practicum.playlist_maker.pdfreader.repository.PdfRepositoryImpl
 import com.practicum.playlist_maker.pdfreader.room.AppDatabase
 import com.practicum.playlist_maker.pdfreader.room.Dao
 import dagger.Module
@@ -26,5 +27,9 @@ object DataModule {
         return database.getDao()
     }
 
-
+    @Provides
+    @Singleton
+    fun providePdfRepositoryImpl(dao: Dao): PdfRepositoryImpl {
+        return PdfRepositoryImpl(dao)
+    }
 }

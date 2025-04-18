@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- Оранжевая полоска (верхняя) -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M3,6h18v3h-18z" />
+    
+    <!-- Зеленая полоска (средняя) -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M3,11h18v3h-18z" />
+    
+    <!-- Синяя полоска (нижняя) -->
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M3,16h18v3h-18z" />
+</vector> 

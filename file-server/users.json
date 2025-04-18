@@ -1,26 +1,54 @@
 [
   {
-    "email": "wert@mail.com",
-    "password": "$2a$10$tFdRL/V16Xvhq3W8RoSvB.V0oRVFE3iZYFdVC/5JExb2nsTTvwxKu",
-    "name": "Флийчук",
-    "department": "pnr",
+    "email": "123123123@mail.ru",
+    "password": "$2a$10$XJFAmsoCBQgenxnIUYD9T..qYMm.Nn702q/ICevWcheentEYPaJ9m",
+    "name": "Фл",
+    "department": "123123",
     "isApproved": true,
-    "createdAt": "2025-03-26T09:23:56.231Z"
+    "createdAt": "2025-04-09T17:10:21.187Z",
+    "id": "1",
+    "avatarUrl": "/uploads/images/1744226307753-avatar_5a5aee2e_bef9_4dca_a510_aea67354b939.jpg"
   },
   {
-    "email": "off@mail.com",
-    "password": "$2a$10$YXDaJ5ib8r684bXNF/qP.ObcRb9rKJZoMtPyAajPN9jGw9IRp/baC",
-    "name": "Флийчук Миша",
-    "department": "ПНР",
+    "email": "123123@mail.ru",
+    "password": "$2a$10$WTu/786Ij66z4UDKHXdsgObTBclYve15p9Wlx8cymyqvdTpoYWTkS",
+    "name": "Семенов Денис Александрович",
+    "department": "ОСОиПНР",
     "isApproved": true,
-    "createdAt": "2025-03-26T10:55:17.835Z"
+    "createdAt": "2025-04-09T17:11:11.808Z",
+    "id": "2",
+    "avatarUrl": "http://172.17.3.66:3000/uploads/avatars/default.jpg"
   },
   {
-    "email": "qwertyred@mail.ru",
-    "password": "$2a$10$xYI6etW2nQ/.mBLnTXsQq.ajw6FIZmrxJueDFXeyHQKrZ3Gu9Saya",
-    "name": "Anton",
-    "department": "PNR",
+    "email": "123uk23@mail.ru",
+    "password": "$2a$10$wFQFTrawnK9A6qb18SH3vOuCzUXQ5.30lnzN78Qqd7R7UhQvYXTM2",
+    "name": "Gzhzhzhz",
+    "department": "Bxbxbxbdb",
     "isApproved": true,
-    "createdAt": "2025-03-26T10:57:43.369Z"
+    "createdAt": "2025-04-13T21:11:04.896Z"
+  },
+  {
+    "email": "offwhiteairforce@mail.ru",
+    "password": "$2a$10$7ialvT54ZfvRqevVqOdqZuxYnYNdrNP9fwxkpKdlI1nI2P2JXiUay",
+    "name": "Bzbzbxbx",
+    "department": "Pnr",
+    "isApproved": true,
+    "createdAt": "2025-04-13T21:11:45.581Z"
+  },
+  {
+    "email": "fliychuk@provita.ru",
+    "password": "$2a$10$dnjN6e1KpPAIp92WEES1vORmfhxPs1AEXU6q.wL711HejO5a6Ls7q",
+    "name": "Флийчук Михаил Андреевич",
+    "department": "ОСОиПНР",
+    "isApproved": true,
+    "createdAt": "2025-04-16T20:38:53.293Z"
+  },
+  {
+    "email": "123uks123@mail.ru",
+    "password": "$2a$10$gmvgvw7lQ6tBHUDZcQGoDuJhyrbqtjC0vDnvZgRIa0hdkY5MaxRtS",
+    "name": "Жопова",
+    "department": "Мопова",
+    "isApproved": true,
+    "createdAt": "2025-04-17T18:02:10.756Z"
   }
 ]

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Скачать приложение</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
+        }
+        header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #4285f4;
+            margin-bottom: 10px;
+        }
+        .app-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .app-icon {
+            width: 120px;
+            height: 120px;
+            margin-right: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #e8f0fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+        .app-details h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .version {
+            display: inline-block;
+            background-color: #e8f0fe;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #4285f4;
+            margin-bottom: 10px;
+        }
+        .download-btn {
+            display: inline-block;
+            background-color: #4285f4;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+            transition: background-color 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .download-btn:hover {
+            background-color: #3367d6;
+        }
+        .download-section {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            padding-left: 20px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #777;
+            font-size: 14px;
+        }
+        .scan-qr {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        @media (max-width: 600px) {
+            .app-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            .app-icon {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Скачать приложение</h1>
+            <p>Установите последнюю версию нашего приложения</p>
+        </header>
+
+        <div class="app-info">
+            <div class="app-icon">📱</div>
+            <div class="app-details">
+                <h2>Приложение Provita</h2>
+                <div class="version" id="app-version">v1.0.0</div>
+                <p>Установите наше приложение для полного доступа ко всем функциям.</p>
+            </div>
+        </div>
+
+        <div class="download-section">
+            <a href="/api/app/download" class="download-btn" id="download-link">Скачать APK-файл</a>
+            <p>Размер: <span id="app-size">---</span> • Обновлено: <span id="updated-date">---</span></p>
+        </div>
+
+        <div class="scan-qr">
+            <h3>Или отсканируйте QR-код</h3>
+            <div class="qr-code" id="qr-code">
+                <!-- QR код будет добавлен через JavaScript -->
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>Инструкция по установке</h3>
+            <ol>
+                <li>Скачайте APK-файл по ссылке выше</li>
+                <li>На вашем Android устройстве откройте скачанный файл</li>
+                <li>Если появится предупреждение о безопасности, разрешите установку из неизвестных источников</li>
+                <li>Следуйте инструкциям на экране для завершения установки</li>
+                <li>После установки запустите приложение</li>
+            </ol>
+        </div>
+
+        <footer>
+            <p>© 2023 Provita. Все права защищены.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Загружаем информацию о приложении
+        fetch('/api/app/info')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('app-version').textContent = `v${data.version || '1.0.0'}`;
+                document.getElementById('app-size').textContent = data.size || '---';
+                document.getElementById('updated-date').textContent = data.updated_at || '---';
+                document.getElementById('download-link').href = data.download_url || '/api/app/download';
+                
+                // Генерируем QR-код
+                if (data.download_url) {
+                    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.download_url)}`;
+                    document.getElementById('qr-code').innerHTML = `<img src="${qrCodeUrl}" alt="QR код для скачивания" style="width:100%;">`;
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке информации о приложении:', error);
+            });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,54 @@
+{
+  "anonymous_1743147618425": {
+    "token": "fOwK-wPtTXeHvPY-lIoXpd:APA91bHu8e8CEXPo0yDP6nxxwGzEbrMlgEP4RBTxzRK03ihA2kbp3LgUdknsxEmf_gQUJYpdO4o9-aPgrCu_sZnJDH8hvSnc3ZvMf9w8p2U4plDj21E1wZM",
+    "lastUpdated": "2025-03-28T07:48:23.350Z",
+    "deviceInfo": "Google sdk_gphone64_x86_64"
+  },
+  "qwertyred@mail.ru": {
+    "token": "fOwK-wPtTXeHvPY-lIoXpd:APA91bHu8e8CEXPo0yDP6nxxwGzEbrMlgEP4RBTxzRK03ihA2kbp3LgUdknsxEmf_gQUJYpdO4o9-aPgrCu_sZnJDH8hvSnc3ZvMf9w8p2U4plDj21E1wZM",
+    "lastUpdated": "2025-03-28T08:05:16.442Z",
+    "deviceInfo": "Google sdk_gphone64_x86_64"
+  },
+  "anonymous_1743150665907": {
+    "token": "fOwK-wPtTXeHvPY-lIoXpd:APA91bHu8e8CEXPo0yDP6nxxwGzEbrMlgEP4RBTxzRK03ihA2kbp3LgUdknsxEmf_gQUJYpdO4o9-aPgrCu_sZnJDH8hvSnc3ZvMf9w8p2U4plDj21E1wZM",
+    "lastUpdated": 1744227145178,
+    "deviceInfo": "Google sdk_gphone64_x86_64",
+    "appVersion": "1.0"
+  },
+  "anonymous_1743155144077": {
+    "token": "dI3Jq_NDSoeHA-h0B_n0w_:APA91bHd2AJhjId_2t516CyuZtraxl2qQTNp5bfsCtidCpBxM14H7w5YC6cVrIoIODVQGYRosH8krlDV9mLxhQdnOvBIigY8zv5S3BoJ5mnslIT1KKrinUg",
+    "lastUpdated": 1744891459825,
+    "deviceInfo": "Xiaomi 2312FPCA6G",
+    "appVersion": "1.0"
+  },
+  "anonymous_1744227501231": {
+    "token": "cXEKaYGHSWe_PgjBS-YInl:APA91bGdP1OdVTQedxRXgOcxznTr1RUZ2-mRbw3vCFJlQxy4TSG6nNYbLbfsy485e0jA3XGajvH4fL2fCEBL5WY7VeQ9ykCq1D_Xjqwh-odTjF-VO-hm3uk",
+    "lastUpdated": 1744472104341,
+    "deviceInfo": "samsung SM-A525F",
+    "appVersion": "1.0"
+  },
+  "anonymous_1744311019128": {
+    "token": "ddnLy8lgQVW-eV_99CFkuL:APA91bFl6BD_tL8bvUe6KdoRmb3RRUfTZz6omwHoyikaDgtp9Fm20frbmZVGZ3vZ_3-xnBFrR9DMCWHiOzJGcIZTpTRzDtFPz8JWAm2S9CBEDe5zDJBD8ag",
+    "lastUpdated": 1744311020448,
+    "deviceInfo": "Google sdk_gphone64_x86_64",
+    "appVersion": "1.0"
+  },
+  "anonymous_1744311312266": {
+    "token": "fQ4tzRDMQXKDzWDtHOBcU0:APA91bGu-WwzQBVTrQ3oFmqhPATd1e9L59IckMp6R4jfWVP-zIAO7VgmRfp0p7EwUBNjTt1LbUqaz5Mi2Wo8ZewrY-9lfnk5TVlFylKO3cW7o5gFRpFVpCI",
+    "lastUpdated": 1744891518381,
+    "deviceInfo": "Google sdk_gphone64_x86_64",
+    "appVersion": "1.0"
+  },
+  "anonymous_1744891747207": {
+    "token": "cY56RxhYSKe0Uy1ewhdjtn:APA91bFru4FItLWlJz4jNt8Lmyt181tf-x14vaJuRHP8lfn7M8RcWQ65WvGdHYAFNn3BvjKzzBarScp3L95k7CeaqwCQHyVscAI8-Sju4Ko3q0JhD4ysv38",
+    "lastUpdated": 1744909239624,
+    "deviceInfo": "Google sdk_gphone64_x86_64",
+    "appVersion": "1.0"
+  },
+  "anonymous_1744893279213": {
+    "token": "dMUQXmL8S4eBAlJXRaNocB:APA91bFInGzNNQeyFKU-velbTZUDuhAUQbXOJ2E_PgmVWpQk7vOMuuOfHjNHBa_rqM1tPb7-DY8KPp1In5hNCmakwnR5Y5qI4l8xeRzF8KDT5rOMXFSghaE",
+    "lastUpdated": 1744893762574,
+    "deviceInfo": "Xiaomi 2312FPCA6G",
+    "appVersion": "1.0"
+  }
+}

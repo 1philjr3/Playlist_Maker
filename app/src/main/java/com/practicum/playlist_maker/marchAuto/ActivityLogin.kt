@@ -46,7 +46,8 @@ class ActivityLogin : AppCompatActivity() {
         val email: String,
         val name: String,
         val department: String,
-        val isAdmin: Boolean
+        val isAdmin: Boolean,
+        val avatarUrl: String? = null
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,12 +117,31 @@ class ActivityLogin : AppCompatActivity() {
                                 putString("institute", loginResponse.user.department)
                                 putString("token", loginResponse.token)
                                 putBoolean("is_logged_in", true)
+                                putString("uid", loginResponse.user.email) // Добавляем UID для будущих запросов
+                                
+                                // Сохраняем URL аватара, если он есть
+                                loginResponse.user.avatarUrl?.let { avatarUrl ->
+                                    // Проверяем, что URL не пустой
+                                    if(avatarUrl.isNotEmpty()) {
+                                        Log.d("ActivityLogin", "Сохраняем URL аватара: $avatarUrl")
+                                        putString("avatar_uri", avatarUrl)
+                                        // Проверяем сохранение
+                                        apply()
+                                        val savedAvatarUrl = sharedPreferences.getString("avatar_uri", null)
+                                        Log.d("ActivityLogin", "Проверка сохраненного URL аватара: $savedAvatarUrl")
+                                    } else {
+                                        Log.d("ActivityLogin", "URL аватара пустой, не сохраняем")
+                                    }
+                                } ?: Log.d("ActivityLogin", "URL аватара отсутствует в ответе сервера")
+                                
+                                // Финальное применение всех изменений
                                 apply()
                             }
                             
                             // Логируем сохраненные данные
                             Log.d("ActivityLogin", "Данные пользователя сохранены: email=${loginResponse.user.email}, " +
-                                    "name=${loginResponse.user.name}, department=${loginResponse.user.department}")
+                                    "name=${loginResponse.user.name}, department=${loginResponse.user.department}, " +
+                                    "avatarUrl=${loginResponse.user.avatarUrl}")
                         }
 
                         // Переходим на главный экран

@@ -69,5 +69,7 @@ interface Dao {
     @Query(Queries.GET_BOOKMARK_WITH_PAGE_AND_PDF_ID)
     suspend fun getBookmarksWithPageAndPdfId(page: Int, pdfId: Long): List<BookmarkEntity>
 
+    @Query("SELECT * FROM ${PdfNoteEntity.TABLE_NAME} WHERE ${PdfNoteEntity.FIELD_IS_FAVORITE} = 1 ORDER BY ${PdfNoteEntity.FIELD_UPDATED_AT} DESC")
+    suspend fun getFavoritePdfNotes(): List<PdfNoteEntity>
 
 }

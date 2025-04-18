@@ -20,7 +20,9 @@ data class PdfNoteEntity(
     @ColumnInfo(FIELD_TAG_ID)
     val tagId: Long?,
     @ColumnInfo(FIELD_UPDATED_AT)
-    val updateAt: Long,
+    val updatedAt: Long,
+    @ColumnInfo(FIELD_IS_FAVORITE)
+    val isFavorite: Boolean = false
 ) {
 
 
@@ -33,5 +35,6 @@ data class PdfNoteEntity(
         const val FIELD_ABOUT = "about"
         const val FIELD_TAG_ID = "tagId"
         const val FIELD_UPDATED_AT = "updated_at"
+        const val FIELD_IS_FAVORITE = "is_favorite"
     }
 }

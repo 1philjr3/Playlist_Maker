@@ -64,7 +64,7 @@ class DirectoryAdapter(
             tvDirectoryDescription.text = directory.description
 
             Glide.with(itemView.context)
-                .load(directory.imageUrl)
+                .load("http://192.168.0.86:3000" + directory.imageUrl)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .placeholder(R.drawable.ic_directory)
                 .fallback(R.drawable.ic_directory)

@@ -1,23 +1,36 @@
 {
   "name": "file-server",
   "version": "1.0.0",
+  "description": "Simple file server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "tunnel": "node tunnel.js"
   },
-  "keywords": [],
+  "keywords": [
+    "file",
+    "server"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.8.4",
     "bcryptjs": "^2.4.3",
+    "body-parser": "^2.2.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "firebase-admin": "^13.2.0",
+    "fs-extra": "^11.3.0",
     "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.10.0"
+    "ngrok": "^5.0.0-beta.2",
+    "nodemailer": "^6.10.0",
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.1"
   },
-  "description": "",
   "devDependencies": {
     "nodemon": "^3.0.3"
   }

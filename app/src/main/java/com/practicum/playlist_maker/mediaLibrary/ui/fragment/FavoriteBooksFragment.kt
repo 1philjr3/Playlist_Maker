@@ -1,5 +1,6 @@
 package com.practicum.playlist_maker.mediaLibrary.ui.fragment
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -84,22 +85,30 @@ class FavoriteBooksFragment : Fragment() {
     }
     
     private fun getServerUrl(): String {
-        val isEmulator = android.os.Build.MODEL.contains("sdk") ||
-                android.os.Build.MODEL.contains("Emulator") ||
-                android.os.Build.MODEL.contains("Android SDK")
+        val prefs = requireContext().getSharedPreferences("PROVITA_SETTINGS", Context.MODE_PRIVATE)
+        val savedUrl = prefs.getString("SERVER_URL", null)
         
-        return if (isEmulator) {
-            "http://10.0.2.2:3000"
-        } else {
-            "http://192.168.0.105:3000"
+        // Если есть сохраненный URL, используем его
+        if (!savedUrl.isNullOrEmpty()) {
+            Log.d("FavoriteBooksFragment", "Используем сохраненный URL сервера: $savedUrl")
+            return savedUrl
         }
+        
+        // Всегда используем URL для эмулятора
+        Log.d("FavoriteBooksFragment", "Используем URL для эмулятора: http://10.0.2.2:3000")
+        return "http://10.0.2.2:3000"
     }
     
     private fun loadFavorites() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
+                // Получаем user-id из SharedPreferences
+                val userId = getUserIdFromSharedPreferences()
+                Log.d(TAG, "Loading favorites for user: $userId")
+
                 val request = Request.Builder()
                     .url("${getServerUrl()}/favorites")
+                    .addHeader("user-id", userId) // Добавляем заголовок user-id
                     .get()
                     .build()
                 
@@ -204,7 +213,7 @@ class FavoriteBooksFragment : Fragment() {
         
         try {
             val request = Request.Builder()
-                .url("http://10.0.2.2:3000/directories")
+                .url("${getServerUrl()}/directories")
                 .build()
                 
             val client = OkHttpClient()
@@ -315,6 +324,12 @@ class FavoriteBooksFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+    
+    // Получение идентификатора пользователя из SharedPreferences
+    private fun getUserIdFromSharedPreferences(): String {
+        val sharedPreferences = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("email", "anonymous") ?: "anonymous"
     }
     
     companion object {

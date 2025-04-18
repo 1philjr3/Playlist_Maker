@@ -4,7 +4,7 @@
     android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/background_color">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -14,7 +14,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#D5E8DA"
+            android:background="@color/background_color"
             android:orientation="vertical">
 
             <LinearLayout
@@ -30,34 +30,36 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <androidx.appcompat.widget.AppCompatImageView
+                <ImageView
+                    android:id="@+id/backButton"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:layout_gravity="start"
+                    android:src="@drawable/arrow_back"
+                    app:tint="?attr/colorOnBackground"
+                    android:contentDescription="Назад" />
+
+                <ImageView
                     android:id="@+id/geeksLogo"
-                    android:layout_width="49.0dip"
-                    android:layout_height="25.0dip"
-                    android:src="@drawable/ic_vk_new_logo" />
+                    android:layout_width="299dp"
+                    android:layout_height="100.0dip"
+                    android:layout_gravity="center_horizontal"
+                    android:src="@drawable/logoprovita" />
 
                 <TextView
                     android:id="@+id/createAccount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="25dp"
+                    android:layout_gravity="center_horizontal"
                     android:fontFamily="@font/ys_display_bold"
                     android:text="@string/edit_profile"
-                    android:textColor="@color/black"
+                    android:textColor="?attr/colorOnBackground"
                     android:textSize="26sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/signupText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:alpha="0.52"
-                    android:fontFamily="@font/ys_display_regular"
-                    android:lineSpacingExtra="5.0dip"
-                    android:text="@string/sign_up_to_get_started"
-                    android:textColor="@color/black"
-                    android:textSize="16sp" />
             </LinearLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -70,40 +72,55 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/welcomeView">
 
-                <TextView
-                    android:id="@+id/loginORSignup"
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/selectAvatarButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="28dp"
-                    android:fontFamily="@font/ys_display_bold"
-                    android:text="@string/edit_profile"
-                    android:textColor="@color/color_text_primary"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
+                    android:text="Выбрать фото"
+                    style="@style/LoginSignupButton"
+                    android:textSize="16sp"
                     app:layout_constraintEnd_toEndOf="@+id/guidelineEnd"
                     app:layout_constraintStart_toStartOf="@+id/guideLineStart"
                     app:layout_constraintTop_toTopOf="parent" />
 
+                <ImageView
+                    android:id="@+id/avatarPreview"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_marginTop="16dp"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="Предпросмотр аватарки"
+                    android:visibility="gone"
+                    android:background="@drawable/avatar_circle_border"
+                    android:padding="2dp"
+                    android:clipToOutline="true"
+                    app:layout_constraintEnd_toEndOf="@+id/guidelineEnd"
+                    app:layout_constraintStart_toStartOf="@+id/guideLineStart"
+                    app:layout_constraintTop_toBottomOf="@+id/selectAvatarButton" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/nameTextInputLayout"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="30dp"
+                    android:layout_marginTop="16dp"
                     android:hint="@string/edit_text_name_hint"
-                    android:textColor="@color/color_text_primary"
-                    android:textColorHint="@color/color_text_hint"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textColorHint="?attr/colorOnBackground"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:clickable="true"
                     app:boxCornerRadiusBottomEnd="12dp"
                     app:boxCornerRadiusBottomStart="12dp"
                     app:boxCornerRadiusTopEnd="12dp"
                     app:boxCornerRadiusTopStart="12dp"
-                    app:boxStrokeColor="#D9D7D7"
+                    app:boxStrokeColor="?attr/colorOnBackground"
                     app:endIconMode="none"
-                    app:endIconTint="#888888"
+                    app:endIconTint="?attr/colorOnBackground"
                     app:layout_constraintEnd_toEndOf="@+id/guidelineEnd"
                     app:layout_constraintStart_toStartOf="@+id/guideLineStart"
-                    app:layout_constraintTop_toBottomOf="@+id/loginORSignup">
+                    app:layout_constraintTop_toBottomOf="@+id/avatarPreview">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextName"
@@ -112,28 +129,36 @@
                         android:fontFamily="@font/ys_display_regular"
                         android:imeOptions="actionDone"
                         android:inputType="textPersonName"
+                        android:enabled="true"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:clickable="true"
                         android:tag="binding_4"
-                        android:textColor="@color/color_text_primary"
-                        android:textColorHint="@color/color_text_hint" />
+                        android:textColor="?attr/colorOnBackground"
+                        android:textColorHint="?attr/colorOnBackground" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/instituteTextInputLayout"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
                     android:hint="@string/edit_text_organisation_hint"
-                    android:textColor="@color/color_text_primary"
-                    android:textColorHint="@color/color_text_hint"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textColorHint="?attr/colorOnBackground"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:clickable="true"
                     app:boxCornerRadiusBottomEnd="12dp"
                     app:boxCornerRadiusBottomStart="12dp"
                     app:boxCornerRadiusTopEnd="12dp"
                     app:boxCornerRadiusTopStart="12dp"
-                    app:boxStrokeColor="#D9D7D7"
+                    app:boxStrokeColor="?attr/colorOnBackground"
                     app:endIconMode="none"
-                    app:endIconTint="#888888"
+                    app:endIconTint="?attr/colorOnBackground"
                     app:layout_constraintEnd_toEndOf="@+id/guidelineEnd"
                     app:layout_constraintStart_toStartOf="@+id/guideLineStart"
                     app:layout_constraintTop_toBottomOf="@+id/nameTextInputLayout">
@@ -143,10 +168,15 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/ys_display_regular"
-                        android:imeOptions="actionNext"
-                        android:tag="binding_2"
-                        android:textColor="@color/color_text_primary"
-                        android:textColorHint="@color/color_text_hint" />
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:enabled="true"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:clickable="true"
+                        android:tag="binding_5"
+                        android:textColor="?attr/colorOnBackground"
+                        android:textColorHint="?attr/colorOnBackground" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <androidx.appcompat.widget.AppCompatButton

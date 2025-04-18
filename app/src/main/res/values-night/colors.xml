@@ -5,11 +5,36 @@
     <color name="text_color">#FFFFFF</color>
     <color name="card_background">#2A2B31</color>
     <color name="card_stroke">#404040</color>
-    <color name="selected_item_background">#1AFFFFFF</color>
+    <color name="selected_item_background">#2566B1E6</color>
     <color name="toolbar_background">#1A1B22</color>
     <color name="toolbar_text">@color/white</color>
     <color name="directory_item_text">@color/white</color>
     <color name="directory_item_description">#AAAAAA</color>
     <color name="dialog_positive_button">@color/blue_light</color>
     <color name="dialog_negative_button">@color/white</color>
+    <color name="hint_color">#88FFFFFF</color>
+    
+    <!-- История -->
+    <color name="history_background">#000000</color>
+    <color name="history_text">#DDDDDD</color>
+    
+    <!-- Чтение -->
+    <color name="reading_background">#000000</color>
+    <color name="reading_path_background">#2A2B31</color>
+    <color name="reading_edit_icon">@color/white</color>
+    <color name="reading_menu_background">#333333</color>
+    <color name="directory_arrow_color">#666666</color>
+    
+    <!-- Диалоги -->
+    <color name="dialog_delete_positive_button">@color/red_light</color>
+    <color name="dialog_delete_negative_button">@color/blue_light</color>
+    <color name="dialog_delete_background">#2A2B31</color>
+    <color name="dialog_delete_text">@color/white</color>
+    
+    <!-- Цвета для кнопок и FAB -->
+    <color name="gray_dark">#666666</color>
+    
+    <!-- Цвета для диалогов загрузки -->
+    <color name="dialog_text">@color/white</color>
+    <color name="dialog_hint">@color/blue_light</color>
 </resources>

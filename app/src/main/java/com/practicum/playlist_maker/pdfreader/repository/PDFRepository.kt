@@ -15,6 +15,8 @@ interface PDFRepository {
 
     suspend fun getAllPdfs(): ResponseState
 
+    suspend fun getFavoritePdfs(): ResponseState
+
     suspend fun deletePdf(pdfId: Long): ResponseState
 
     // TAG

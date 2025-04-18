@@ -1,7 +1,7 @@
 <resources>
     <string name="icon_description">Иконка элемента</string>
     <string name="theme_item_title">Название темы</string>
-    <string name="app_name">Playlist Maker</string>
+    <string name="app_name">proVITA</string>
     <string name="search">Поиск</string>
     <string name="media_library">Документация</string>
     <string name="settings">Настройки</string>
@@ -9,11 +9,10 @@
     <string name="share_app">Поделиться приложением</string>
     <string name="write_to_support">Написать в поддержку</string>
     <string name="user_agreement">Пользовательское соглашение</string>
-    <string name="yandex_practicum_URL">https://practicum.yandex.ru/profile/android-developer/</string>
-    <string name="my_email">bigmag174@yandex.ru</string>
-    <string name="email_subject">Сообщение разработчикам и разработчицам приложения Playlist Maker</string>
-    <string name="email_text">Спасибо разработчикам и разработчицам за крутое приложение!</string>
-    <string name="user_agreement_URL">https://yandex.ru/legal/practicum_offer/</string>
+    <string name="my_email">123uks123@mail.ru</string>
+    <string name="email_subject">Сообщение разработчикам приложения</string>
+    <string name="email_text">Спасибо разработчикам за крутое приложение!</string>
+    <string name="user_agreement_URL">https://ngrok.com/legal</string>
     <string name="nothing_found">Ничего не найдено</string>
     <string name="internet_issues">Проблемы со связью\n\nЗагрузка не удалась. Проверьте подключение к интернету</string>
     <string name="server_issues">Ошибка сервера</string>
@@ -104,7 +103,7 @@
     <string name="send_code">Отправить код</string>
     <string name="sign_in">Войти</string>
     <string name="sign_in_to_continue">Пожалуйста, войдите, чтобы продолжить работу со справочником!</string>
-    <string name="sign_up">Зарегистрироваться</string>
+    <string name="sign_up">Отправить форму</string>
     <string name="sign_up_now">Зарегистрироваться</string>
     <string name="sign_up_to_get_started">Добро пожаловать! Чтобы начать работу и воспользоваться справочником, пожалуйста, сделайте вход.</string>
     <string name="welcome">Добро пожаловать!</string>

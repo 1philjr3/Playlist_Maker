@@ -1,10 +1,10 @@
 # Используем базовый образ Node.js
-FROM node:14
+FROM node:18-alpine
 
 # Создаем рабочую директорию
 WORKDIR /app
 
-# Копируем package.json и package-lock.json
+# Копируем файлы зависимостей
 COPY package*.json ./
 
 # Устанавливаем зависимости
@@ -13,11 +13,21 @@ RUN npm install
 # Копируем исходный код
 COPY . .
 
-# Создаем папку для загрузок
-RUN mkdir -p /app/uploads
+# Создаем директории для хранения файлов, если их нет
+RUN mkdir -p uploads/pdfs uploads/images
 
-# Открываем порт 3000
+# Экспортируем порт
 EXPOSE 3000
 
-# Запускаем сервер
-CMD ["npm", "start"]
+# Аргумент для режима запуска (локальный или с туннелем)
+ARG USE_TUNNEL=false
+ENV USE_TUNNEL=$USE_TUNNEL
+
+# Скрипт запуска
+CMD if [ "$USE_TUNNEL" = "true" ]; then \
+      node tunnel.js & \
+      sleep 3 && \
+      node server.js; \
+    else \
+      node server.js; \
+    fi
